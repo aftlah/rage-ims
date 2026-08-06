@@ -115,9 +115,15 @@ export async function fetchAppSettings(): Promise<{
     .in('key', [...APP_SETTING_KEYS])
 
   if (error) {
+    const missing =
+      /schema cache|does not exist|Could not find the table/i.test(
+        error.message || '',
+      )
     return {
       data: { ...DEFAULT_APP_SETTINGS },
-      error: error.message || 'Gagal memuat settings',
+      error: missing
+        ? 'Tabel app_settings belum ada. Jalankan supabase/app_settings.sql di Supabase SQL Editor.'
+        : error.message || 'Gagal memuat settings',
     }
   }
 
