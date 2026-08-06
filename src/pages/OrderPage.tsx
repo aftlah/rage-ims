@@ -115,7 +115,7 @@ export function OrderPage() {
     <PageStack>
       <PageHeader
         title="Order"
-        subtitle="Cart + submit ke Supabase (tanpa Discord)"
+        subtitle="Cart + submit ke Supabase & Discord"
       >
         <Button variant="outline" size="sm" onClick={() => void refresh()}>
           <RefreshCw className="size-4" />

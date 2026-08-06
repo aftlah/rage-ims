@@ -309,7 +309,7 @@ export async function submitNitipCuci(args: {
     waktu: now.toISOString(),
   }
 
-  let { error: logErr } = await supabase
+  let { data: inserted, error: logErr } = await supabase
     .from('nitip_cuci_logs')
     .insert(payload)
     .select('id')
@@ -317,7 +317,7 @@ export async function submitNitipCuci(args: {
 
   if (logErr && isMissingColumnError(logErr, 'discord_message_id')) {
     delete payload.discord_message_id
-    ;({ error: logErr } = await supabase
+    ;({ data: inserted, error: logErr } = await supabase
       .from('nitip_cuci_logs')
       .insert(payload)
       .select('id')
@@ -331,6 +331,34 @@ export async function submitNitipCuci(args: {
         logErr.message ||
         'Gagal simpan ke database. Jalankan migration nitip_cuci_logs di Supabase.',
     }
+  }
+
+  try {
+    const { postDiscord, persistDiscordMessageId } = await import('./discord')
+    const { buildNitipCuciDiscordPayload } = await import('./discordMessages')
+    const periodeLabel = periodeValue
+      ? formatOrderankeLabel(periodeValue)
+      : undefined
+    const { content, embeds } = buildNitipCuciDiscordPayload({
+      nama,
+      uangMerah,
+      uangPutih,
+      keterangan,
+      periodeLabel,
+      waktu: now.toISOString(),
+      imageUrl,
+      isPaid: false,
+    })
+    const mid = await postDiscord({
+      channel: 'nitip_cuci',
+      content,
+      embeds,
+    })
+    if (mid && inserted?.id) {
+      await persistDiscordMessageId('nitip_cuci_logs', inserted.id, mid)
+    }
+  } catch (e) {
+    console.warn('[discord] nitip cuci', e)
   }
 
   return { ok: true, error: null }
@@ -364,6 +392,13 @@ export async function deleteNitipCuciRow(
 ): Promise<{ ok: boolean; error: string | null }> {
   if (!canDeleteNitipCuciRow(row, member)) {
     return { ok: false, error: 'Tidak bisa menghapus data ini' }
+  }
+
+  try {
+    const { deleteDiscordForTableRow } = await import('./discord')
+    await deleteDiscordForTableRow('nitip_cuci', 'nitip_cuci_logs', row.id)
+  } catch (e) {
+    console.warn('[discord] nitip delete', e)
   }
 
   const { data: rpcOk, error: rpcErr } = await supabase.rpc(

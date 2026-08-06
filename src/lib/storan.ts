@@ -504,6 +504,22 @@ export async function upsertStoran(args: {
     if (existing?.id) savedRowId = existing.id
   }
 
+  let prevDiscordMsgId = ''
+  if (savedRowId) {
+    try {
+      const { fetchDiscordMessageId, deleteDiscordMessage } = await import(
+        './discord'
+      )
+      prevDiscordMsgId =
+        (await fetchDiscordMessageId('storan_logs', savedRowId)) || ''
+      if (prevDiscordMsgId) {
+        await deleteDiscordMessage('storan', prevDiscordMsgId)
+      }
+    } catch (e) {
+      console.warn('[discord] storan prev delete', e)
+    }
+  }
+
   const payload = {
     member_id: memberId,
     nama,
@@ -564,6 +580,31 @@ export async function upsertStoran(args: {
   }
 
   await softDeleteOtherStoranLogs(memberId, periodeValue, savedRowId)
+
+  try {
+    const { postDiscord, persistDiscordMessageId } = await import('./discord')
+    const { buildStoranDiscordMessage } = await import('./discordMessages')
+    const { fmtLocalDateTime } = await import('./dates')
+    const periodeLabel =
+      periodeValue >= 1000
+        ? `M${Math.floor((periodeValue - 1000) / 10)}-W${(periodeValue - 1000) % 10}`
+        : `M${Math.floor(periodeValue / 10)}-W${periodeValue % 10}`
+    const msg = buildStoranDiscordMessage({
+      periodeLabel,
+      nama,
+      penerima: payload.penerima,
+      statusLabel: labelStatus,
+      status: statusVal,
+      waktu: fmtLocalDateTime(payload.waktu),
+    })
+    const mid = await postDiscord({ channel: 'storan', content: msg })
+    if (mid && savedRowId) {
+      await persistDiscordMessageId('storan_logs', savedRowId, mid)
+    }
+  } catch (e) {
+    console.warn('[discord] storan submit', e)
+  }
+
   return { ok: true, error: null }
 }
 
@@ -575,6 +616,13 @@ export async function deleteStoranRow(
     return { ok: false, error: 'Tidak bisa menghapus data ini' }
   }
   if (!row.id) return { ok: false, error: 'Tidak ada baris storan' }
+
+  try {
+    const { deleteDiscordForTableRow } = await import('./discord')
+    await deleteDiscordForTableRow('storan', 'storan_logs', row.id)
+  } catch (e) {
+    console.warn('[discord] storan delete', e)
+  }
 
   let soft = await softDeleteById('storan_logs', row.id)
   if (!soft.ok) {

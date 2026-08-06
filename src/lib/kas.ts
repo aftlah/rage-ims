@@ -137,19 +137,67 @@ export async function submitRageCash(args: {
     ? new Date(args.waktuIso).toISOString()
     : new Date().toISOString()
 
-  const { error } = await supabase
+  const { data: inserted, error } = await supabase
     .from('rage_cash_logs')
     .insert({ type, amount, category, note, waktu })
     .select('id')
     .single()
 
   if (error) return { ok: false, error: error.message }
+
+  try {
+    const { postDiscord, persistDiscordMessageId } = await import('./discord')
+    const { buildRageCashEmbed } = await import('./discordMessages')
+    const bal = await fetchRageCashBalanceSafe()
+    const embed = buildRageCashEmbed({
+      type,
+      amount,
+      category,
+      note,
+      waktu,
+      balance: bal,
+    })
+    const mid = await postDiscord({ channel: 'rage_cash', embeds: [embed] })
+    if (mid && inserted?.id) {
+      await persistDiscordMessageId('rage_cash_logs', inserted.id, mid)
+    }
+  } catch (e) {
+    console.warn('[discord] rage cash', e)
+  }
+
   return { ok: true, error: null }
+}
+
+async function fetchRageCashBalanceSafe(): Promise<number | null> {
+  try {
+    let { data, error } = await supabase
+      .from('rage_cash_logs')
+      .select('type,amount')
+      .is('deleted_at', null)
+    if (error && isMissingColumnError(error, 'deleted_at')) {
+      ;({ data, error } = await supabase
+        .from('rage_cash_logs')
+        .select('type,amount'))
+    }
+    if (error || !data) return null
+    return (data as { type: string; amount: number }[]).reduce((sum, r) => {
+      const a = Number(r.amount) || 0
+      return sum + (r.type === 'IN' ? a : -a)
+    }, 0)
+  } catch {
+    return null
+  }
 }
 
 export async function deleteRageCashEntry(
   id: number,
 ): Promise<{ ok: boolean; error: string | null }> {
+  try {
+    const { deleteDiscordForTableRow } = await import('./discord')
+    await deleteDiscordForTableRow('rage_cash', 'rage_cash_logs', id)
+  } catch (e) {
+    console.warn('[discord] rage cash delete', e)
+  }
   const soft = await softDeleteById('rage_cash_logs', id)
   if (!soft.ok) {
     if (soft.error && isMissingColumnError(soft.error, 'deleted_at')) {

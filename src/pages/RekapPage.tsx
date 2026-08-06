@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { Megaphone, RefreshCw, Send } from 'lucide-react'
 import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import { Badge } from '@/components/ui/badge'
@@ -36,6 +36,10 @@ import {
 } from '@/components/ui/StatusBlock'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRekapOrders } from '@/features/rekap/useRekapOrders'
+import {
+  shareDashboardFromRows,
+  sharePaymentStatusFromRows,
+} from '@/lib/discordShares'
 import { fmtUsd } from '@/lib/format'
 import { formatOrderankeLabel } from '@/lib/orderWindow'
 import type { DeliveredFilter, OrderRow } from '@/lib/rekapOrders'
@@ -60,6 +64,7 @@ export function RekapPage() {
     error,
     message,
     busyId,
+    filtered,
     stats,
     byUser,
     batches,
@@ -72,11 +77,37 @@ export function RekapPage() {
   })
 
   const [archiveTarget, setArchiveTarget] = useState<OrderRow | null>(null)
+  const [shareBusy, setShareBusy] = useState(false)
+  const [shareMsg, setShareMsg] = useState<string | null>(null)
 
   const confirmArchive = async () => {
     if (!archiveTarget) return
     await archiveRow(archiveTarget)
     setArchiveTarget(null)
+  }
+
+  const handleShareDashboard = async () => {
+    setShareBusy(true)
+    setShareMsg(null)
+    const res = await shareDashboardFromRows(filtered, {
+      month,
+      week: week != null ? String(week) : undefined,
+      name: isAdmin ? name || undefined : member?.nama || undefined,
+    })
+    setShareBusy(false)
+    setShareMsg(res.ok ? 'Ringkasan dikirim ke Discord' : res.error)
+  }
+
+  const handleSharePayment = async () => {
+    setShareBusy(true)
+    setShareMsg(null)
+    const res = await sharePaymentStatusFromRows(filtered, {
+      month,
+      week: week != null ? String(week) : undefined,
+      name: isAdmin ? name || undefined : member?.nama || undefined,
+    })
+    setShareBusy(false)
+    setShareMsg(res.ok ? 'Status bayar dikirim ke Discord' : res.error)
   }
 
   return (
@@ -85,11 +116,49 @@ export function RekapPage() {
         title="Rekap Order"
         subtitle="List & angka per periode (mirror dashboard/rekap lama)"
       >
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          <RefreshCw className="size-4" />
-          <span className="hidden sm:inline">Refresh</span>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {isAdmin ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={shareBusy || loading || !filtered.length}
+                onClick={() => void handleShareDashboard()}
+              >
+                <Send className="size-4" />
+                <span className="hidden sm:inline">Share qty</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={shareBusy || loading || !filtered.length}
+                onClick={() => void handleSharePayment()}
+              >
+                <Megaphone className="size-4" />
+                <span className="hidden sm:inline">Share bayar</span>
+              </Button>
+            </>
+          ) : null}
+          <Button variant="outline" size="sm" onClick={() => void refresh()}>
+            <RefreshCw className="size-4" />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+        </div>
       </PageHeader>
+
+      {shareMsg ? (
+        <InlineMessage
+          tone={
+            shareMsg.toLowerCase().includes('gagal') ||
+            shareMsg.toLowerCase().includes('cek') ||
+            shareMsg.toLowerCase().includes('tidak ada')
+              ? 'error'
+              : 'success'
+          }
+        >
+          {shareMsg}
+        </InlineMessage>
+      ) : null}
 
       <Card className="border-border/60 bg-card/80">
         <CardContent className="pt-6">

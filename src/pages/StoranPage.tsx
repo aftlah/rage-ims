@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { Megaphone, RefreshCw } from 'lucide-react'
 import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import { PageHeader } from '@/components/layout/PageHeader'
 import {
@@ -62,6 +62,7 @@ import {
   type StoranRekapRow,
   type StoranStatus,
 } from '@/lib/storan'
+import { shareStoranRekapToDiscord } from '@/lib/discordShares'
 
 type Tab = 'mingguan' | 'nitip'
 
@@ -223,6 +224,30 @@ function StoranMingguanPanel() {
               <RefreshCw className="size-4" />
               Refresh
             </Button>
+            {isAdmin ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={busy || loading}
+                onClick={() => {
+                  void (async () => {
+                    setBusy(true)
+                    setMessage(null)
+                    setError(null)
+                    const res = await shareStoranRekapToDiscord(resolvedPeriode)
+                    setBusy(false)
+                    if (!res.ok) {
+                      setError(res.error)
+                      return
+                    }
+                    setMessage('Rekap storan dikirim ke Discord')
+                  })()
+                }}
+              >
+                <Megaphone className="size-4" />
+                Announce rekap
+              </Button>
+            ) : null}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">

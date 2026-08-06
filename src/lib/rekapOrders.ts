@@ -238,12 +238,20 @@ export async function updateOrderDelivered(
   return { ok: true }
 }
 
-/** Soft-delete archive — mirror softDeleteById("orders"). No Discord. */
+/** Soft-delete archive — mirror softDeleteById("orders") + Discord delete. */
 export async function archiveOrderById(
   id: number,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const rowId = Number(id)
   if (!rowId) return { ok: false, error: 'ID tidak valid' }
+
+  try {
+    const { deleteDiscordForTableRow } = await import('./discord')
+    await deleteDiscordForTableRow('orders', 'orders', rowId)
+  } catch (e) {
+    console.warn('[discord] order archive', e)
+  }
+
   const now = new Date().toISOString()
   const { data, error } = await supabase
     .from('orders')

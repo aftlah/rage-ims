@@ -252,11 +252,9 @@ export async function recordAbsenKota(args: {
       }
     }
 
-    return {
-      ok: true,
-      error: null,
-      row: mapAbsenRow(row as unknown as Record<string, unknown>),
-    }
+    const mapped = mapAbsenRow(row as unknown as Record<string, unknown>)
+    await syncAbsenKotaDiscord(mapped)
+    return { ok: true, error: null, row: mapped }
   }
 
   if (args.action === 'keluar') {
@@ -311,11 +309,9 @@ export async function recordAbsenKota(args: {
       return { ok: false, error: error.message || 'Gagal update absen keluar', row: null }
     }
 
-    return {
-      ok: true,
-      error: null,
-      row: mapAbsenRow(row as unknown as Record<string, unknown>),
-    }
+    const mapped = mapAbsenRow(row as unknown as Record<string, unknown>)
+    await syncAbsenKotaDiscord(mapped)
+    return { ok: true, error: null, row: mapped }
   }
 
   return { ok: false, error: 'Aksi tidak valid', row: null }
@@ -372,6 +368,12 @@ export async function deleteAbsenKotaRow(
   if (!isAdminMember(member)) {
     return { ok: false, error: 'Hanya admin yang bisa hapus data absen' }
   }
+  try {
+    const { deleteDiscordForTableRow } = await import('./discord')
+    await deleteDiscordForTableRow('absen', 'absen_kota_logs', row.id)
+  } catch (e) {
+    console.warn('[discord] absen delete', e)
+  }
   const soft = await softDeleteById('absen_kota_logs', row.id)
   if (!soft.ok) {
     if (soft.error && isMissingColumnError(soft.error, 'deleted_at')) {
@@ -380,4 +382,36 @@ export async function deleteAbsenKotaRow(
     return { ok: false, error: soft.error?.message || 'Gagal hapus absen' }
   }
   return { ok: true, error: null }
+}
+
+async function syncAbsenKotaDiscord(row: AbsenRow | null): Promise<void> {
+  if (!row?.id) return
+  try {
+    const {
+      fetchDiscordMessageId,
+      patchDiscord,
+      postDiscord,
+      persistDiscordMessageId,
+    } = await import('./discord')
+    const { buildAbsenKotaDiscordEmbeds } = await import('./discordMessages')
+    const { content, embeds } = buildAbsenKotaDiscordEmbeds(row)
+    const existing = await fetchDiscordMessageId('absen_kota_logs', row.id)
+    if (existing) {
+      await patchDiscord({
+        channel: 'absen',
+        messageId: existing,
+        content,
+        embeds,
+      })
+      return
+    }
+    const mid = await postDiscord({
+      channel: 'absen',
+      content,
+      embeds,
+    })
+    if (mid) await persistDiscordMessageId('absen_kota_logs', row.id, mid)
+  } catch (e) {
+    console.warn('[discord] absen sync', e)
+  }
 }

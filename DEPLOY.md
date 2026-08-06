@@ -68,19 +68,75 @@ Site settings (maintenance, delete PIN, notice) live in Supabase table `app_sett
 
 PIN is checked in the browser (same model as app lama `ADMIN_DELETE_PIN`). Do not treat it as a server secret.
 
-## 6. Smoke test after deploy
+## 6. Discord notify (Edge Function)
+
+Webhook URLs **must not** go in frontend `.env`. They live as Supabase Edge Function secrets.
+
+### 6.1 Deploy function
+
+From the project root (requires [Supabase CLI](https://supabase.com/docs/guides/cli) linked to the same project as the app lama):
+
+```bash
+supabase functions deploy discord-notify
+```
+
+Source: `supabase/functions/discord-notify/index.ts`
+
+JWT verification stays **on** (default) so only logged-in clients can invoke it.
+
+### 6.2 Set secrets
+
+Supabase Dashboard → Edge Functions → Secrets, or CLI:
+
+```bash
+supabase secrets set DISCORD_ENABLED=true
+supabase secrets set DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/..."
+supabase secrets set DISCORD_ORDER_PAYMENT_WEBHOOK_URL="..."
+supabase secrets set DISCORD_STORAN_WEBHOOK_URL="..."
+supabase secrets set DISCORD_ABSEN_WEBHOOK_URL="..."
+supabase secrets set DISCORD_NITIP_CUCI_WEBHOOK_URL="..."
+supabase secrets set DISCORD_DRUGS_WEBHOOK_URL="..."
+supabase secrets set DISCORD_RAGE_CASH_WEBHOOK_URL="..."
+```
+
+Copy values from app lama `config.js` (do not commit them).
+
+| Channel (client) | Secret |
+|------------------|--------|
+| orders / order_window / dashboard | `DISCORD_WEBHOOK_URL` |
+| order_payment | `DISCORD_ORDER_PAYMENT_WEBHOOK_URL` (fallback default) |
+| storan | `DISCORD_STORAN_WEBHOOK_URL` (fallback default) |
+| absen | `DISCORD_ABSEN_WEBHOOK_URL` (no fallback) |
+| nitip_cuci | `DISCORD_NITIP_CUCI_WEBHOOK_URL` → storan → default |
+| drugs | `DISCORD_DRUGS_WEBHOOK_URL` (fallback default) |
+| rage_cash | `DISCORD_RAGE_CASH_WEBHOOK_URL` (no fallback) |
+
+Set `DISCORD_ENABLED=false` to soft-disable all Discord posts without undeploying.
+
+### 6.3 Discord smoke test
+
+1. Login → submit Order / Storan / Absen / Drugs / Kas / Nitip → message appears in the matching Discord channel
+2. Soft-delete a row → Discord message deleted (when `discord_message_id` column exists)
+3. Admin → Periode Order → open window (`orderanke < 1000`) → `@here` announce; **Announce buka** button works
+4. Rekap → **Share qty** / **Share bayar**; Storan → **Announce rekap**; Drugs → **Kirim total**
+5. Built JS bundle must **not** contain webhook URL strings
+
+## 7. Smoke test after deploy
 
 1. Open the site URL → login works
 2. Refresh on `/rekap` or `/kas` → still loads (not Apache 404)
 3. Storan / Absen / Kas / Drugs create → rows appear in Supabase tables
 4. Admin Settings → save PIN / maintenance → non-admin sees maintenance screen when enabled
 5. Hapus data → dialog minta PIN
+6. Discord flows above (section 6.3)
 
 ## Checklist
 
 - [ ] `.env` filled locally, not committed
 - [ ] `supabase/app_settings.sql` executed once
+- [ ] `discord-notify` deployed + Discord secrets set
 - [ ] `npm run build` succeeded
 - [ ] Uploaded `dist/` contents including `.htaccess`
 - [ ] Hard refresh browser after upload
 - [ ] Admin PIN set in Settings
+- [ ] Discord smoke test passed

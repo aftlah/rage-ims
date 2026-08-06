@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { Megaphone, RefreshCw } from 'lucide-react'
 import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import {
@@ -53,6 +53,7 @@ import {
 } from '@/lib/drugs'
 import { fmtUsd } from '@/lib/format'
 import { fetchMembersLite, type MemberLite } from '@/lib/membersLite'
+import { shareDrugsTotalsToDiscord } from '@/lib/discordShares'
 
 export function DrugsPage() {
   const { member, isAdmin } = useAuth()
@@ -186,10 +187,41 @@ export function DrugsPage() {
         title="Drugs Sales"
         subtitle="Setoran Weed / Meth / Opium — gaji putih & uang RAGE otomatis"
       >
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          <RefreshCw className="size-4" />
-          <span className="hidden sm:inline">Refresh</span>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {isAdmin ? (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy || !currentBatch}
+              onClick={() => {
+                void (async () => {
+                  const batch =
+                    batchFilter === 'current'
+                      ? currentBatch
+                      : Number(batchFilter) || currentBatch
+                  if (!batch) return
+                  setBusy(true)
+                  setMessage(null)
+                  setError(null)
+                  const res = await shareDrugsTotalsToDiscord(batch)
+                  setBusy(false)
+                  if (!res.ok) {
+                    setError(res.error)
+                    return
+                  }
+                  setMessage('Total batch dikirim ke Discord')
+                })()
+              }}
+            >
+              <Megaphone className="size-4" />
+              <span className="hidden sm:inline">Kirim total</span>
+            </Button>
+          ) : null}
+          <Button variant="outline" size="sm" onClick={() => void refresh()}>
+            <RefreshCw className="size-4" />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+        </div>
       </PageHeader>
       <p className="-mt-2 text-xs text-muted-foreground sm:-mt-3">
         Batch aktif:{' '}

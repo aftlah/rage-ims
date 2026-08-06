@@ -177,16 +177,36 @@ export function describeOrderWindow(win: OrderWindow | null): {
   }
 }
 
-/** Auto-close windows whose end_time has passed (mirror expireOrderWindows). */
+/** Auto-close windows whose end_time has passed + Discord close announce. */
 export async function expirePastOrderWindows(): Promise<number> {
   const now = getNowIso()
   const { data, error } = await supabase
     .from('order_windows')
-    .select('id')
+    .select('id,orderanke,start_time,end_time,is_active,announced_close')
     .eq('is_active', true)
     .lt('end_time', now)
 
-  if (error || !data?.length) return 0
+  if (error || !data?.length) {
+    // Fallback without announced_close column
+    if (error && String(error.message || '').includes('announced_close')) {
+      const res2 = await supabase
+        .from('order_windows')
+        .select('id,orderanke,start_time,end_time,is_active')
+        .eq('is_active', true)
+        .lt('end_time', now)
+      if (res2.error || !res2.data?.length) return 0
+      const ids = res2.data.map((r) => r.id).filter(Boolean)
+      await supabase
+        .from('order_windows')
+        .update({ is_active: false })
+        .in('id', ids)
+      for (const r of res2.data) {
+        await maybeAnnounceOrderWindowClose(r as OrderWindowAnnounceRow)
+      }
+      return ids.length
+    }
+    return 0
+  }
 
   const ids = data.map((r) => r.id).filter(Boolean)
   if (!ids.length) return 0
@@ -197,7 +217,135 @@ export async function expirePastOrderWindows(): Promise<number> {
     .in('id', ids)
 
   if (upErr) return 0
+
+  for (const r of data) {
+    await maybeAnnounceOrderWindowClose(r as OrderWindowAnnounceRow)
+  }
   return ids.length
+}
+
+type OrderWindowAnnounceRow = {
+  id: number
+  orderanke: number | null
+  start_time: string
+  end_time: string
+  announced_open?: boolean | null
+  announced_close?: boolean | null
+}
+
+async function markAnnounced(
+  id: number,
+  field: 'announced_open' | 'announced_close',
+): Promise<void> {
+  try {
+    await supabase
+      .from('order_windows')
+      .update({ [field]: true })
+      .eq('id', id)
+  } catch {
+    /* column may be missing */
+  }
+}
+
+async function maybeAnnounceOrderWindowOpen(
+  row: OrderWindowAnnounceRow,
+): Promise<void> {
+  if (!row?.id) return
+  if (row.announced_open === true) return
+  const v = row.orderanke
+  if (v != null && v >= 1000) {
+    await markAnnounced(row.id, 'announced_open')
+    return
+  }
+  try {
+    const { postDiscord } = await import('./discord')
+    const { buildOrderWindowAnnounceMessage } = await import(
+      './discordMessages'
+    )
+    const msg = buildOrderWindowAnnounceMessage({
+      orderanke: row.orderanke,
+      startTime: row.start_time,
+      endTime: row.end_time,
+      kind: 'open',
+    })
+    await postDiscord({ channel: 'order_window', content: msg })
+    await markAnnounced(row.id, 'announced_open')
+  } catch (e) {
+    console.warn('[discord] window open', e)
+  }
+}
+
+async function maybeAnnounceOrderWindowClose(
+  row: OrderWindowAnnounceRow,
+): Promise<void> {
+  if (!row?.id) return
+  if (row.announced_close === true) return
+  const v = row.orderanke
+  if (v != null && v >= 1000) {
+    await markAnnounced(row.id, 'announced_close')
+    return
+  }
+  try {
+    const { postDiscord } = await import('./discord')
+    const { buildOrderWindowAnnounceMessage } = await import(
+      './discordMessages'
+    )
+    const msg = buildOrderWindowAnnounceMessage({
+      orderanke: row.orderanke,
+      startTime: row.start_time,
+      endTime: row.end_time,
+      kind: 'close',
+    })
+    await postDiscord({ channel: 'order_window', content: msg })
+    await markAnnounced(row.id, 'announced_close')
+  } catch (e) {
+    console.warn('[discord] window close', e)
+  }
+}
+
+/** Manual announce open for an order window (admin button). */
+export async function announceOrderWindowOpen(
+  id: number,
+): Promise<{ ok: boolean; error: string | null }> {
+  const { data, error } = await supabase
+    .from('order_windows')
+    .select('id,orderanke,start_time,end_time,is_active,announced_open')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (error || !data) {
+    return { ok: false, error: error?.message || 'Jadwal tidak ditemukan' }
+  }
+  const row = data as OrderWindowAnnounceRow
+  if (row.orderanke != null && row.orderanke >= 1000) {
+    return { ok: false, error: 'Announce Discord hanya untuk periode Order' }
+  }
+  try {
+    const { postDiscord } = await import('./discord')
+    const { buildOrderWindowAnnounceMessage } = await import(
+      './discordMessages'
+    )
+    const msg = buildOrderWindowAnnounceMessage({
+      orderanke: row.orderanke,
+      startTime: row.start_time,
+      endTime: row.end_time,
+      kind: 'open',
+    })
+    const mid = await postDiscord({ channel: 'order_window', content: msg })
+    if (!mid) {
+      return {
+        ok: false,
+        error: 'Gagal kirim Discord (cek Edge Function / webhook secrets)',
+      }
+    }
+    await markAnnounced(row.id, 'announced_open')
+    return { ok: true, error: null }
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : 'Gagal announce',
+    }
+  }
 }
 
 export async function fetchAdminOrderWindows(
@@ -307,6 +455,14 @@ export async function upsertOrderWindow(
     if (error) {
       return { ok: false, error: error.message || 'Gagal update jadwal' }
     }
+    if (row.is_active) {
+      const { data: win } = await supabase
+        .from('order_windows')
+        .select('id,orderanke,start_time,end_time,announced_open')
+        .eq('id', editId)
+        .maybeSingle()
+      if (win) await maybeAnnounceOrderWindowOpen(win as OrderWindowAnnounceRow)
+    }
     return { ok: true, id: editId }
   }
 
@@ -322,18 +478,28 @@ export async function upsertOrderWindow(
   const { data, error } = await supabase
     .from('order_windows')
     .insert([row])
-    .select('id')
+    .select('id,orderanke,start_time,end_time,announced_open')
     .limit(1)
 
   if (error) {
     return { ok: false, error: error.message || 'Gagal membuat jadwal' }
   }
-  return { ok: true, id: data?.[0]?.id ? Number(data[0].id) : undefined }
+  const created = data?.[0]
+  if (created && row.is_active) {
+    await maybeAnnounceOrderWindowOpen(created as OrderWindowAnnounceRow)
+  }
+  return { ok: true, id: created?.id ? Number(created.id) : undefined }
 }
 
 export async function closeOrderWindow(
   id: number,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const { data: before } = await supabase
+    .from('order_windows')
+    .select('id,orderanke,start_time,end_time,announced_close')
+    .eq('id', id)
+    .maybeSingle()
+
   const now = getNowIso()
   const { error } = await supabase
     .from('order_windows')
@@ -342,6 +508,13 @@ export async function closeOrderWindow(
 
   if (error) {
     return { ok: false, error: error.message || 'Gagal menutup jadwal' }
+  }
+
+  if (before) {
+    await maybeAnnounceOrderWindowClose({
+      ...(before as OrderWindowAnnounceRow),
+      end_time: now,
+    })
   }
   return { ok: true }
 }

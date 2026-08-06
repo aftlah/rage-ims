@@ -345,5 +345,24 @@ export async function submitOrder(args: {
     return { ok: false, error: `Gagal menyimpan: ${error.message}` }
   }
 
+  // Discord: soft-fail — order already saved
+  try {
+    const scrapByItem: Record<string, number> = {}
+    for (const cat of Object.keys(args.catalog) as (keyof typeof args.catalog)[]) {
+      for (const it of args.catalog[cat] || []) {
+        scrapByItem[it.name] = Number(it.scrap) || 0
+      }
+    }
+    const { sendMemberOrdersDiscord } = await import('./discord')
+    await sendMemberOrdersDiscord(
+      args.memberId,
+      args.nama,
+      args.orderanke,
+      scrapByItem,
+    )
+  } catch (e) {
+    console.warn('[discord] order submit', e)
+  }
+
   return { ok: true, orderId }
 }

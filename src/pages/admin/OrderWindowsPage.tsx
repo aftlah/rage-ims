@@ -3,6 +3,7 @@ import {
   CalendarClock,
   CheckCircle2,
   CircleOff,
+  Megaphone,
   MoreHorizontal,
   Pencil,
   Power,
@@ -46,6 +47,7 @@ import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { formatWindowDateTime } from '@/lib/format'
 import {
+  announceOrderWindowOpen,
   closeOrderWindow,
   decodeOrderanke,
   deleteOrderWindow,
@@ -446,15 +448,41 @@ export function OrderWindowsPage() {
           </div>
 
           {openNow ? (
-            <Button
-              variant="destructive"
-              className="w-full shrink-0 sm:w-auto"
-              disabled={busy}
-              onClick={() => void handleClose(openNow)}
-            >
-              <Power className="size-4" />
-              Tutup sekarang
-            </Button>
+            <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+              {kind === 'order' ? (
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  disabled={busy}
+                  onClick={() => {
+                    void (async () => {
+                      setBusy(true)
+                      setMessage(null)
+                      setError(null)
+                      const res = await announceOrderWindowOpen(openNow.id)
+                      setBusy(false)
+                      if (!res.ok) {
+                        setError(res.error)
+                        return
+                      }
+                      setMessage('Announcement dikirim ke Discord')
+                    })()
+                  }}
+                >
+                  <Megaphone className="size-4" />
+                  Announce buka
+                </Button>
+              ) : null}
+              <Button
+                variant="destructive"
+                className="w-full sm:w-auto"
+                disabled={busy}
+                onClick={() => void handleClose(openNow)}
+              >
+                <Power className="size-4" />
+                Tutup sekarang
+              </Button>
+            </div>
           ) : (
             <Button
               className="w-full shrink-0 sm:w-auto"

@@ -277,6 +277,36 @@ export async function submitDrugsSale(args: {
       error = res2.error
     }
     if (error) return { ok: false, error: error.message }
+
+    try {
+      const prevId = await (
+        await import('./discord')
+      ).fetchDiscordMessageId('drugs_sales', args.editId)
+      if (prevId) {
+        await (
+          await import('./discord')
+        ).deleteDiscordMessage('drugs', prevId)
+      }
+      const { postDiscord, persistDiscordMessageId } = await import('./discord')
+      const { buildDrugsEntryEmbed } = await import('./discordMessages')
+      const embed = buildDrugsEntryEmbed({
+        mode: 'edit',
+        nama,
+        jenis,
+        jumlahTotal: jumlah,
+        duitMerahTotal: duitMerah,
+        upahPutihTotal: upahPutih,
+        periode_orderanke: targetBatch,
+        waktu: nowIso,
+      })
+      const mid = await postDiscord({ channel: 'drugs', embeds: [embed] })
+      if (mid) {
+        await persistDiscordMessageId('drugs_sales', args.editId, mid)
+      }
+    } catch (e) {
+      console.warn('[discord] drugs edit', e)
+    }
+
     return { ok: true, error: null }
   }
 
@@ -292,7 +322,7 @@ export async function submitDrugsSale(args: {
     jumlah,
   }
 
-  let { error } = await supabase
+  let { data: inserted, error } = await supabase
     .from('drugs_sales')
     .insert(insertPayload)
     .select('id')
@@ -300,7 +330,7 @@ export async function submitDrugsSale(args: {
 
   if (error && isMissingColumnError(error, 'discord_message_id')) {
     delete insertPayload.discord_message_id
-    ;({ error } = await supabase
+    ;({ data: inserted, error } = await supabase
       .from('drugs_sales')
       .insert(insertPayload)
       .select('id')
@@ -318,7 +348,7 @@ export async function submitDrugsSale(args: {
       periode_orderanke: targetBatch,
       waktu: nowIso,
     }
-    ;({ error } = await supabase
+    ;({ data: inserted, error } = await supabase
       .from('drugs_sales')
       .insert(insertPayload)
       .select('id')
@@ -326,6 +356,29 @@ export async function submitDrugsSale(args: {
   }
 
   if (error) return { ok: false, error: error.message }
+
+  try {
+    const { postDiscord, persistDiscordMessageId } = await import('./discord')
+    const { buildDrugsEntryEmbed } = await import('./discordMessages')
+    const embed = buildDrugsEntryEmbed({
+      mode: 'insert',
+      nama,
+      jenis,
+      jumlahTotal: jumlah,
+      duitMerahTotal: duitMerah,
+      upahPutihTotal: upahPutih,
+      periode_orderanke: targetBatch,
+      waktu: nowIso,
+    })
+    const mid = await postDiscord({ channel: 'drugs', embeds: [embed] })
+    const rowId = inserted?.id
+    if (mid && rowId) {
+      await persistDiscordMessageId('drugs_sales', rowId, mid)
+    }
+  } catch (e) {
+    console.warn('[discord] drugs insert', e)
+  }
+
   return { ok: true, error: null }
 }
 
@@ -352,6 +405,15 @@ export async function toggleDrugsPaid(
 export async function deleteDrugsSales(
   ids: string[],
 ): Promise<{ ok: boolean; error: string | null }> {
+  try {
+    const { deleteDiscordForTableRow } = await import('./discord')
+    for (const id of ids) {
+      await deleteDiscordForTableRow('drugs', 'drugs_sales', id)
+    }
+  } catch (e) {
+    console.warn('[discord] drugs delete', e)
+  }
+
   const soft = await softDeleteByIds('drugs_sales', ids)
   if (!soft.ok) {
     if (soft.error && isMissingColumnError(soft.error, 'deleted_at')) {
