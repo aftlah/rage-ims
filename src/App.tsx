@@ -13,6 +13,7 @@ import { AbsenPage } from './pages/AbsenPage'
 import { KasPage } from './pages/KasPage'
 import { DrugsPage } from './pages/DrugsPage'
 import { CatalogPage } from './pages/admin/CatalogPage'
+import { OrderWindowsPage } from './pages/admin/OrderWindowsPage'
 import { SettingsPage } from './pages/admin/SettingsPage'
 import { UsersPage } from './pages/admin/UsersPage'
 
@@ -39,6 +40,7 @@ export default function App() {
                   <Route element={<AdminRoute />}>
                     <Route path="admin/catalog" element={<CatalogPage />} />
                     <Route path="admin/users" element={<UsersPage />} />
+                    <Route path="admin/windows" element={<OrderWindowsPage />} />
                     <Route path="admin/settings" element={<SettingsPage />} />
                   </Route>
                 </Route>

@@ -54,6 +54,7 @@ const navGroups: NavGroup[] = [
     title: 'Admin',
     adminOnly: true,
     items: [
+      { to: '/admin/windows', label: 'Windows', icon: '🗓️' },
       { to: '/admin/catalog', label: 'Catalog', icon: '🗂️' },
       { to: '/admin/users', label: 'Users', icon: '👥' },
       { to: '/admin/settings', label: 'Settings', icon: '⚙️' },
@@ -68,6 +69,7 @@ const pageTitles: Record<string, string> = {
   '/kas': 'Kas',
   '/rekap': 'Rekap',
   '/drugs': 'Drugs',
+  '/admin/windows': 'Windows',
   '/admin/catalog': 'Catalog',
   '/admin/users': 'Users',
   '/admin/settings': 'Settings',
