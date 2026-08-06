@@ -17,6 +17,7 @@ type UseOrderCartArgs = {
   memberId: number | null
   nama: string | null
   role: string | null
+  maintenanceBlocked?: boolean
   onSubmitted: () => Promise<void>
 }
 
@@ -75,6 +76,13 @@ export function useOrderCart(args: UseOrderCartArgs) {
     setSubmitting(true)
     setMessage({ type: 'info', text: 'Menyimpan...' })
     try {
+      if (args.maintenanceBlocked) {
+        setMessage({
+          type: 'error',
+          text: 'Sedang maintenance: Sebentar yaa kawan',
+        })
+        return
+      }
       if (!args.memberId || !args.nama) {
         setMessage({ type: 'error', text: 'Akun belum terhubung ke member' })
         return

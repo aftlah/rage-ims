@@ -33,6 +33,7 @@ import {
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSettings } from '@/contexts/SettingsContext'
 import { useOrderCart } from '@/features/order/useOrderCart'
 import { useOrderCatalog } from '@/features/order/useOrderCatalog'
 import {
@@ -47,6 +48,7 @@ import { normItemName } from '@/lib/orderUtils'
 
 export function OrderPage() {
   const { member, isAdmin } = useAuth()
+  const { maintenanceMode } = useSettings()
   const {
     catalog,
     orderWindow,
@@ -79,6 +81,7 @@ export function OrderPage() {
     memberId: member?.id ?? null,
     nama: member?.nama ?? null,
     role,
+    maintenanceBlocked: maintenanceMode && !isAdmin,
     onSubmitted: refreshTotals,
   })
 

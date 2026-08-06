@@ -1,22 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { PageHeader, PageStack } from '@/components/layout/PageHeader'
+import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import {
   EmptyState,
   ErrorState,
   InlineMessage,
   LoadingState,
 } from '@/components/ui/StatusBlock'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -490,27 +481,18 @@ export function AbsenPage() {
         </CardContent>
       </Card>
 
-      <AlertDialog
+      <ConfirmDeleteDialog
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-      >
-        <AlertDialogContent className="border-border/60 bg-card">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus absen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteTarget
-                ? `Absen ${deleteTarget.nama} (${deleteTarget.tanggal}) akan dihapus permanen.`
-                : ''}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void confirmDelete()}>
-              Ya, hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title="Hapus absen?"
+        description={
+          deleteTarget
+            ? `Absen ${deleteTarget.nama} (${deleteTarget.tanggal}) akan dihapus permanen.`
+            : ''
+        }
+        confirmLabel="Ya, hapus"
+        onConfirm={() => confirmDelete()}
+      />
     </PageStack>
   )
 }

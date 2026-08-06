@@ -1,22 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus, RefreshCw } from 'lucide-react'
 import { PageHeader, PageStack } from '@/components/layout/PageHeader'
+import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import {
   EmptyState,
   ErrorState,
   InlineMessage,
   LoadingState,
 } from '@/components/ui/StatusBlock'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -292,29 +283,16 @@ export function CatalogPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog
+      <ConfirmDeleteDialog
         open={!!toggleTarget}
         onOpenChange={(open) => !open && setToggleTarget(null)}
-      >
-        <AlertDialogContent className="border-border/60 bg-card">
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {toggleTarget?.is_active ? 'Nonaktifkan' : 'Aktifkan'} item?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {toggleTarget?.name} akan{' '}
-              {toggleTarget?.is_active ? 'disembunyikan' : 'ditampilkan'} di
-              katalog order.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void confirmToggle()}>
-              Ya, lanjutkan
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title={`${toggleTarget?.is_active ? 'Nonaktifkan' : 'Aktifkan'} item?`}
+        description={`${toggleTarget?.name ?? ''} akan ${
+          toggleTarget?.is_active ? 'disembunyikan' : 'ditampilkan'
+        } di katalog order.`}
+        confirmLabel="Ya, lanjutkan"
+        onConfirm={() => confirmToggle()}
+      />
 
       {loading ? <LoadingState message="Memuat katalog…" /> : null}
 

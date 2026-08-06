@@ -1,16 +1,7 @@
 import { useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { PageHeader, PageStack } from '@/components/layout/PageHeader'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -344,26 +335,14 @@ export function RekapPage() {
           ))
         : null}
 
-      <AlertDialog
+      <ConfirmDeleteDialog
         open={!!archiveTarget}
         onOpenChange={(open) => !open && setArchiveTarget(null)}
-      >
-        <AlertDialogContent className="border-border/60 bg-card">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Arsipkan baris order?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Order {archiveTarget?.item} milik {archiveTarget?.nama} akan
-              diarsipkan (soft-delete).
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void confirmArchive()}>
-              Ya, arsipkan
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title="Arsipkan baris order?"
+        description={`Order ${archiveTarget?.item} milik ${archiveTarget?.nama} akan diarsipkan (soft-delete).`}
+        confirmLabel="Ya, arsipkan"
+        onConfirm={() => confirmArchive()}
+      />
     </PageStack>
   )
 }

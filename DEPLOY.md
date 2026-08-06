@@ -57,15 +57,30 @@ If routes 404 after refresh:
 2. Confirm host allows `mod_rewrite` / `.htaccess` overrides
 3. If the app lives in a subdirectory (e.g. `/rage/`), set `RewriteBase /rage/` in `.htaccess` and rebuild with matching Vite `base` (ask if needed)
 
-## 5. Smoke test after deploy
+## 5. App settings (one-time SQL)
+
+Site settings (maintenance, delete PIN, notice) live in Supabase table `app_settings`.
+
+1. Open Supabase → SQL Editor
+2. Run the contents of `supabase/app_settings.sql`
+3. Confirm table `app_settings` has 4 seed rows
+4. Login as **admin** → Admin → Settings → set PIN hapus (min 6 chars) and toggle maintenance as needed
+
+PIN is checked in the browser (same model as app lama `ADMIN_DELETE_PIN`). Do not treat it as a server secret.
+
+## 6. Smoke test after deploy
 
 1. Open the site URL → login works
 2. Refresh on `/rekap` or `/kas` → still loads (not Apache 404)
 3. Storan / Absen / Kas / Drugs create → rows appear in Supabase tables
+4. Admin Settings → save PIN / maintenance → non-admin sees maintenance screen when enabled
+5. Hapus data → dialog minta PIN
 
 ## Checklist
 
 - [ ] `.env` filled locally, not committed
+- [ ] `supabase/app_settings.sql` executed once
 - [ ] `npm run build` succeeded
 - [ ] Uploaded `dist/` contents including `.htaccess`
 - [ ] Hard refresh browser after upload
+- [ ] Admin PIN set in Settings

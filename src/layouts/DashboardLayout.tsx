@@ -10,6 +10,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSettings } from '@/contexts/SettingsContext'
 import {
   describeOrderWindow,
   fetchActiveOrderWindow,
@@ -55,6 +56,7 @@ const navGroups: NavGroup[] = [
     items: [
       { to: '/admin/catalog', label: 'Catalog', icon: '🗂️' },
       { to: '/admin/users', label: 'Users', icon: '👥' },
+      { to: '/admin/settings', label: 'Settings', icon: '⚙️' },
     ],
   },
 ]
@@ -68,6 +70,7 @@ const pageTitles: Record<string, string> = {
   '/drugs': 'Drugs',
   '/admin/catalog': 'Catalog',
   '/admin/users': 'Users',
+  '/admin/settings': 'Settings',
 }
 
 function navClassName({ isActive }: { isActive: boolean }) {
@@ -137,6 +140,7 @@ function SidebarNav({
 
 export function DashboardLayout() {
   const { member, isAdmin, signOut } = useAuth()
+  const { siteNotice, maintenanceMode } = useSettings()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [orderWin, setOrderWin] = useState<OrderWindow | null>(null)
@@ -251,6 +255,19 @@ export function DashboardLayout() {
             </div>
           </div>
         </header>
+
+        {siteNotice.trim() ? (
+          <div className="mb-2 shrink-0 rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-xs text-primary sm:mb-3 sm:px-4 sm:text-sm">
+            {siteNotice.trim()}
+          </div>
+        ) : null}
+
+        {maintenanceMode && isAdmin ? (
+          <div className="mb-2 shrink-0 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200 sm:mb-3 sm:px-4 sm:text-sm">
+            Mode maintenance aktif — member diblok. Matikan di Admin →
+            Settings.
+          </div>
+        ) : null}
 
         <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-2xl border border-border/60 bg-card/50 p-3 backdrop-blur-sm sm:p-4 md:p-6">
           <Outlet />

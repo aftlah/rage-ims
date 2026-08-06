@@ -1,20 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
+import { PageHeader } from '@/components/layout/PageHeader'
 import {
   EmptyState,
   InlineMessage,
   LoadingState,
 } from '@/components/ui/StatusBlock'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -42,7 +34,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/contexts/AuthContext'
 import { fmtLocalDateTime } from '@/lib/dates'
 import { fmtIdMoney } from '@/lib/format'
@@ -403,25 +394,14 @@ function StoranMingguanPanel() {
         </CardContent>
       </Card>
 
-      <AlertDialog
+      <ConfirmDeleteDialog
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-      >
-        <AlertDialogContent className="border-border/60 bg-card">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus storan?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Hapus storan {deleteTarget?.nama}? Status kembali ke Belum.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void confirmDelete()}>
-              Ya, hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title="Hapus storan?"
+        description={`Hapus storan ${deleteTarget?.nama}? Status kembali ke Belum.`}
+        confirmLabel="Ya, hapus"
+        onConfirm={() => confirmDelete()}
+      />
     </>
   )
 }
@@ -824,25 +804,14 @@ function NitipCuciPanel() {
         </CardContent>
       </Card>
 
-      <AlertDialog
+      <ConfirmDeleteDialog
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
-      >
-        <AlertDialogContent className="border-border/60 bg-card">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus nitip cuci?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Hapus nitip cuci {deleteTarget?.nama}?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void confirmDelete()}>
-              Ya, hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        title="Hapus nitip cuci?"
+        description={`Hapus nitip cuci ${deleteTarget?.nama}?`}
+        confirmLabel="Ya, hapus"
+        onConfirm={() => confirmDelete()}
+      />
     </>
   )
 }
