@@ -1,0 +1,17 @@
+# Apache SPA fallback for Vite React Router (BrowserRouter)
+# Upload this file together with the contents of dist/
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Don't rewrite files or directories that exist
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Fallback to index.html for client-side routes
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Optional: disable directory listing
+Options -Indexes
