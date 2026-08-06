@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Plus, RefreshCw } from 'lucide-react'
+import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import {
   EmptyState,
   ErrorState,
@@ -164,25 +165,20 @@ export function CatalogPage() {
   if (!isAdmin) return null
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="page-title">Admin Catalog</h2>
-          <p className="page-subtitle">
-            CRUD catalog_items (tanpa service role)
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => void refresh()}>
-            <RefreshCw className="size-4" />
-            Refresh
-          </Button>
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="size-4" />
-            Tambah Item
-          </Button>
-        </div>
-      </div>
+    <PageStack>
+      <PageHeader
+        title="Admin Catalog"
+        subtitle="CRUD catalog_items (tanpa service role)"
+      >
+        <Button variant="outline" size="sm" onClick={() => void refresh()}>
+          <RefreshCw className="size-4" />
+          <span className="hidden sm:inline">Refresh</span>
+        </Button>
+        <Button size="sm" onClick={openCreate}>
+          <Plus className="size-4" />
+          Tambah Item
+        </Button>
+      </PageHeader>
 
       {message ? <InlineMessage tone="success">{message}</InlineMessage> : null}
       {error ? <ErrorState message={error} /> : null}
@@ -405,6 +401,6 @@ export function CatalogPage() {
       {!loading && !items.length ? (
         <EmptyState title="Katalog kosong" message="Tambah item pertama." />
       ) : null}
-    </div>
+    </PageStack>
   )
 }

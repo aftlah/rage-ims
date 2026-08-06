@@ -72,7 +72,7 @@ const pageTitles: Record<string, string> = {
 
 function navClassName({ isActive }: { isActive: boolean }) {
   return [
-    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+    'flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
     isActive
       ? 'bg-primary/15 text-primary'
       : 'text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -100,13 +100,11 @@ function SidebarNav({
 }) {
   return (
     <>
-      <div className="border-b border-border px-4 py-5">
-        <p className="text-gradient-gold text-lg font-extrabold tracking-[0.14em]">
+      <div className="border-b border-border px-4 py-4">
+        <p className="text-gradient-gold text-sm font-extrabold tracking-[0.12em]">
           R.A.G.E
         </p>
-        <p className="mt-0.5 text-[11px] font-medium tracking-wide text-muted-foreground">
-          Order System
-        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground">Order System</p>
       </div>
 
       <nav className="flex flex-1 flex-col gap-5 overflow-y-auto p-3">
@@ -172,6 +170,9 @@ export function DashboardLayout() {
   }, [])
 
   const winInfo = describeOrderWindow(orderWin)
+  const orderBadgeLabel = winInfo.isOpen
+    ? `Open · ${formatOrderankeLabel(orderWin?.orderanke)}`
+    : 'Order ditutup'
 
   const sidebarFooter = (
     <div className="border-t border-border p-3">
@@ -187,18 +188,18 @@ export function DashboardLayout() {
   )
 
   return (
-    <div className="app-shell flex h-screen overflow-hidden">
-      <aside className="m-3 mr-0 hidden h-[calc(100vh-1.5rem)] w-60 shrink-0 flex-col rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl md:flex">
+    <div className="app-shell flex h-dvh overflow-hidden">
+      <aside className="m-2 mr-0 hidden h-[calc(100dvh-1rem)] w-60 shrink-0 flex-col rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl md:m-3 md:mr-0 md:flex md:h-[calc(100dvh-1.5rem)]">
         <SidebarNav visibleGroups={visibleGroups} />
         {sidebarFooter}
       </aside>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-[min(18rem,85vw)] p-0">
-          <SheetHeader className="border-b border-border">
-            <SheetTitle className="text-gradient-gold">Menu</SheetTitle>
+        <SheetContent side="left" className="w-[min(18rem,90vw)] p-0">
+          <SheetHeader className="border-b border-border px-4 py-3">
+            <SheetTitle className="text-gradient-gold text-left">Menu</SheetTitle>
           </SheetHeader>
-          <div className="flex h-[calc(100%-4rem)] flex-col">
+          <div className="flex h-[calc(100dvh-4rem)] flex-col">
             <SidebarNav
               visibleGroups={visibleGroups}
               onNavigate={() => setMobileOpen(false)}
@@ -208,40 +209,39 @@ export function DashboardLayout() {
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-3 pl-0 sm:pl-3">
-        <header className="mb-3 flex min-h-[3.75rem] shrink-0 flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card/80 px-4 py-2.5 backdrop-blur-xl sm:px-5">
-          <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-2 sm:p-3">
+        <header className="mb-2 flex shrink-0 flex-col gap-3 rounded-2xl border border-border/60 bg-card/80 px-3 py-3 backdrop-blur-xl sm:mb-3 sm:flex-row sm:items-center sm:justify-between sm:px-4 md:px-5">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <Button
               variant="outline"
               size="icon"
-              className="md:hidden"
+              className="shrink-0 md:hidden"
               aria-label="Buka menu"
               onClick={() => setMobileOpen(true)}
             >
               <Menu className="size-5" />
             </Button>
-            <div className="min-w-0">
-              <h1 className="truncate text-base font-bold tracking-tight">
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-sm font-bold tracking-tight sm:text-base">
                 {pageTitle}
               </h1>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
+              <div className="mt-1">
                 <Badge
                   variant={winInfo.isOpen ? 'default' : 'destructive'}
                   title={winInfo.detailText}
+                  className="max-w-full truncate text-[10px] sm:text-xs"
                 >
-                  {winInfo.isOpen
-                    ? `Open · ${formatOrderankeLabel(orderWin?.orderanke)}`
-                    : 'Order ditutup'}
+                  <span className="truncate">{orderBadgeLabel}</span>
                 </Badge>
               </div>
             </div>
           </div>
 
-          <div className="flex max-w-[240px] items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2">
+          <div className="flex w-full min-w-0 items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-2.5 py-2 sm:w-auto sm:max-w-[240px] sm:px-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
               {initials}
             </div>
-            <div className="min-w-0 truncate text-right">
+            <div className="min-w-0 flex-1 truncate sm:text-right">
               <p className="truncate text-xs font-semibold">
                 {member?.nama || 'Belum terhubung'}
               </p>
@@ -252,7 +252,7 @@ export function DashboardLayout() {
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-border/60 bg-card/50 p-4 backdrop-blur-sm sm:p-6">
+        <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain rounded-2xl border border-border/60 bg-card/50 p-3 backdrop-blur-sm sm:p-4 md:p-6">
           <Outlet />
         </main>
       </div>

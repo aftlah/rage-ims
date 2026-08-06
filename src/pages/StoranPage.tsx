@@ -42,6 +42,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PageHeader } from '@/components/layout/PageHeader'
 import { useAuth } from '@/contexts/AuthContext'
 import { fmtLocalDateTime } from '@/lib/dates'
 import { fmtIdMoney } from '@/lib/format'
@@ -80,20 +81,17 @@ export function StoranPage() {
     <Tabs
       value={tab}
       onValueChange={(v) => setTab(v as Tab)}
-      className="flex flex-col gap-5"
+      className="page-stack flex flex-col"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="page-title">Storan</h2>
-          <p className="page-subtitle">
-            Mingguan & nitip cuci (mirror query lama)
-          </p>
-        </div>
-        <TabsList>
+      <PageHeader
+        title="Storan"
+        subtitle="Mingguan & nitip cuci (mirror query lama)"
+      >
+        <TabsList className="grid h-auto w-full grid-cols-2 sm:w-auto sm:inline-flex">
           <TabsTrigger value="mingguan">Mingguan</TabsTrigger>
           <TabsTrigger value="nitip">Nitip Cuci</TabsTrigger>
         </TabsList>
-      </div>
+      </PageHeader>
 
       <TabsContent value="mingguan" className="mt-0 flex flex-col gap-5">
         <StoranMingguanPanel />
@@ -199,7 +197,7 @@ function StoranMingguanPanel() {
       <Card className="border-border/60 bg-card/80">
         <CardContent className="space-y-4 pt-6">
           <div className="flex flex-wrap items-end gap-3">
-            <div className="flex min-w-[200px] flex-1 flex-col gap-2">
+            <div className="flex min-w-0 flex-1 flex-col gap-2 sm:min-w-[200px]">
               <Label>Periode</Label>
               <Select
                 value={

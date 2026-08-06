@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import {
   EmptyState,
   ErrorState,
@@ -123,15 +124,12 @@ export function KasPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="page-title">Kas R.A.G.E</h2>
-          <p className="page-subtitle">
-            Pemasukan & pengeluaran (`rage_cash_logs`)
-          </p>
-        </div>
-        <Card className="border-border/60 bg-card/80 px-4 py-2">
+    <PageStack>
+      <PageHeader
+        title="Kas R.A.G.E"
+        subtitle="Pemasukan & pengeluaran (rage_cash_logs)"
+      >
+        <Card className="w-full border-border/60 bg-card/80 px-4 py-2 sm:w-auto">
           <CardDescription className="text-[10px] tracking-widest uppercase">
             Saldo
           </CardDescription>
@@ -139,7 +137,7 @@ export function KasPage() {
             {balance == null ? '—' : fmtUsd(balance)}
           </p>
         </Card>
-      </div>
+      </PageHeader>
 
       <Card className="border-border/60 bg-card/80">
         <CardHeader>
@@ -326,6 +324,6 @@ export function KasPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageStack>
   )
 }

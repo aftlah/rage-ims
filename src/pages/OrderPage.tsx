@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import { RefreshCw } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -108,19 +109,16 @@ export function OrderPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="page-title">Order</h2>
-          <p className="page-subtitle">
-            Cart + submit ke Supabase (tanpa Discord)
-          </p>
-        </div>
+    <PageStack>
+      <PageHeader
+        title="Order"
+        subtitle="Cart + submit ke Supabase (tanpa Discord)"
+      >
         <Button variant="outline" size="sm" onClick={() => void refresh()}>
           <RefreshCw className="size-4" />
-          Refresh
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
-      </div>
+      </PageHeader>
 
       <Card className="border-border/60 bg-card/80">
         <CardContent className="pt-6">
@@ -171,7 +169,7 @@ export function OrderPage() {
       {error ? <ErrorState message={error} /> : null}
 
       {!loading && !error ? (
-        <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-[1.1fr_0.9fr]">
           <Card className="border-border/60 bg-card/80">
             <CardHeader>
               <CardTitle className="text-primary">Tambah Item</CardTitle>
@@ -379,6 +377,6 @@ export function OrderPage() {
           </Card>
         </div>
       ) : null}
-    </div>
+    </PageStack>
   )
 }

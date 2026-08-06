@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import {
   EmptyState,
   ErrorState,
@@ -203,19 +204,16 @@ export function AbsenPage() {
   const st = absenStatusLabel(openSession)
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="page-title">Absen Kota</h2>
-          <p className="page-subtitle">
-            Masuk / keluar kota + bukti foto
-          </p>
-        </div>
+    <PageStack>
+      <PageHeader
+        title="Absen Kota"
+        subtitle="Masuk / keluar kota + bukti foto"
+      >
         <Button variant="outline" size="sm" onClick={() => void refresh()}>
           <RefreshCw className="size-4" />
-          Refresh
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
-      </div>
+      </PageHeader>
 
       <Card className="border-border/60 bg-card/80">
         <CardHeader className="flex-row items-start justify-between space-y-0 gap-3">
@@ -513,6 +511,6 @@ export function AbsenPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageStack>
   )
 }

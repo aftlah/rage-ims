@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import {
   EmptyState,
   ErrorState,
@@ -189,25 +190,22 @@ export function DrugsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="page-title">Drugs Sales</h2>
-          <p className="page-subtitle">
-            Setoran Weed / Meth / Opium — gaji putih & uang RAGE otomatis
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Batch aktif:{' '}
-            {currentBatch
-              ? drugsPeriodeShort(currentBatch)
-              : 'tidak ada (buka window drugs)'}
-          </p>
-        </div>
+    <PageStack>
+      <PageHeader
+        title="Drugs Sales"
+        subtitle="Setoran Weed / Meth / Opium — gaji putih & uang RAGE otomatis"
+      >
         <Button variant="outline" size="sm" onClick={() => void refresh()}>
           <RefreshCw className="size-4" />
-          Refresh
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
-      </div>
+      </PageHeader>
+      <p className="-mt-2 text-xs text-muted-foreground sm:-mt-3">
+        Batch aktif:{' '}
+        {currentBatch
+          ? drugsPeriodeShort(currentBatch)
+          : 'tidak ada (buka window drugs)'}
+      </p>
 
       <Card className="border-border/60 bg-card/80">
         <CardHeader>
@@ -482,6 +480,6 @@ export function DrugsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageStack>
   )
 }

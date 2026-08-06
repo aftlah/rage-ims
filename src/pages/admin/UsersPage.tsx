@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import {
   EmptyState,
   ErrorState,
@@ -139,24 +140,21 @@ export function UsersPage() {
   if (!isAdmin) return null
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="page-title">Admin Users</h2>
-          <p className="page-subtitle">
-            List members + patch via RPC (tanpa service role)
-          </p>
-        </div>
+    <PageStack>
+      <PageHeader
+        title="Admin Users"
+        subtitle="List members + patch via RPC (tanpa service role)"
+      >
         <Button variant="outline" size="sm" onClick={() => void refresh()}>
           <RefreshCw className="size-4" />
-          Refresh
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
-      </div>
+      </PageHeader>
 
       {message ? <InlineMessage tone="success">{message}</InlineMessage> : null}
       {error ? <ErrorState message={error} /> : null}
 
-      <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-[0.9fr_1.1fr]">
         <Card className="border-border/60 bg-card/80">
           <CardHeader>
             <CardTitle>Members</CardTitle>
@@ -382,6 +380,6 @@ export function UsersPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </PageStack>
   )
 }

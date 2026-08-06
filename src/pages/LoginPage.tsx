@@ -39,7 +39,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="app-shell relative flex min-h-screen items-center justify-center px-4">
+    <div className="app-shell relative flex min-h-dvh items-center justify-center px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <div className="login-orbs" aria-hidden />
 
       <Card className="relative w-full max-w-[22rem] border-border/60 bg-card/90 backdrop-blur-xl">

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -88,23 +89,20 @@ export function RekapPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="page-title">Rekap Order</h2>
-          <p className="page-subtitle">
-            List & angka per periode (mirror dashboard/rekap lama)
-          </p>
-        </div>
+    <PageStack>
+      <PageHeader
+        title="Rekap Order"
+        subtitle="List & angka per periode (mirror dashboard/rekap lama)"
+      >
         <Button variant="outline" size="sm" onClick={() => void refresh()}>
           <RefreshCw className="size-4" />
-          Refresh
+          <span className="hidden sm:inline">Refresh</span>
         </Button>
-      </div>
+      </PageHeader>
 
       <Card className="border-border/60 bg-card/80">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
             <div className="flex flex-col gap-2">
               <Label>Bulan</Label>
               <Select
@@ -193,7 +191,7 @@ export function RekapPage() {
       {message ? <InlineMessage tone="success">{message}</InlineMessage> : null}
       {error ? <ErrorState message={error} /> : null}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-5">
         {[
           { label: 'Order', value: String(stats.orderCount) },
           { label: 'Baris', value: String(stats.lineCount) },
@@ -366,6 +364,6 @@ export function RekapPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageStack>
   )
 }
