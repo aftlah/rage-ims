@@ -284,7 +284,7 @@ export function RekapPage() {
           <CardHeader>
             <CardTitle className="text-primary">Total per User</CardTitle>
           </CardHeader>
-          <CardContent className="px-0 pb-0">
+          <CardContent className="px-4 pb-4">
             {byUser.length === 0 ? (
               <EmptyState title="Tidak ada data" />
             ) : (
@@ -301,13 +301,17 @@ export function RekapPage() {
                 <TableBody>
                   {byUser.map((u) => (
                     <TableRow key={u.nama}>
-                      <TableCell>{u.nama}</TableCell>
-                      <TableCell className="text-center">{u.count}</TableCell>
-                      <TableCell className="text-center">{u.qty}</TableCell>
-                      <TableCell className="text-right text-primary">
+                      <TableCell className="font-medium">{u.nama}</TableCell>
+                      <TableCell className="text-center text-muted-foreground">
+                        {u.count}
+                      </TableCell>
+                      <TableCell className="text-center text-muted-foreground">
+                        {u.qty}
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular-nums">
                         {fmtUsd(u.total)}
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center text-muted-foreground">
                         {u.scrap > 0 ? Number(u.scrap.toFixed(2)) : '—'}
                       </TableCell>
                     </TableRow>
@@ -333,7 +337,7 @@ export function RekapPage() {
                   {batch.count} baris • {fmtUsd(batch.total)}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="px-0 pb-0">
+              <CardContent className="px-4 pb-4">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -363,8 +367,10 @@ export function RekapPage() {
                             : '—'}
                         </TableCell>
                         <TableCell>{row.item}</TableCell>
-                        <TableCell className="text-center">{row.qty}</TableCell>
-                        <TableCell className="text-right text-primary">
+                        <TableCell className="text-center text-muted-foreground">
+                          {row.qty}
+                        </TableCell>
+                        <TableCell className="text-right font-mono tabular-nums">
                           {fmtUsd(row.subtotal)}
                         </TableCell>
                         <TableCell className="text-center">

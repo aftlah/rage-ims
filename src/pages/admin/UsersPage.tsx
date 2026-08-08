@@ -339,7 +339,7 @@ export function UsersPage() {
               <CardTitle>Audit Trail</CardTitle>
               <CardDescription>Riwayat aksi admin terbaru</CardDescription>
             </CardHeader>
-            <CardContent className="px-0 pb-0">
+            <CardContent className="px-4 pb-4">
               {audit.length === 0 ? (
                 <div className="px-6 pb-6">
                   <EmptyState title="Belum ada audit / tidak terbaca" />

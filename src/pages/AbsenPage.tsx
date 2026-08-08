@@ -387,7 +387,7 @@ export function AbsenPage() {
             />
           </div>
         </CardHeader>
-        <CardContent className="px-0 pb-0">
+        <CardContent className="px-4 pb-4">
           {loading ? (
             <LoadingState message="Memuat…" />
           ) : !rows.length ? (

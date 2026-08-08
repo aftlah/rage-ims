@@ -354,7 +354,7 @@ function StoranMingguanPanel() {
             {isCurrent ? 'Rekap Storan Minggu Ini' : 'Rekap Storan (History)'}
           </CardTitle>
         </CardHeader>
-        <CardContent className="px-0 pb-0">
+        <CardContent className="px-4 pb-4">
           {loading ? (
             <LoadingState />
           ) : !rows.length ? (
@@ -727,7 +727,7 @@ function NitipCuciPanel() {
         <CardHeader>
           <CardTitle>Daftar Nitip Cuci</CardTitle>
         </CardHeader>
-        <CardContent className="px-0 pb-0">
+        <CardContent className="px-4 pb-4">
           {loading ? (
             <LoadingState />
           ) : !visible.length ? (

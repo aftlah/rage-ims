@@ -396,7 +396,7 @@ export function DrugsPage() {
         <CardHeader>
           <CardTitle>Riwayat Drugs</CardTitle>
         </CardHeader>
-        <CardContent className="px-0 pb-0">
+        <CardContent className="px-4 pb-4">
           {loading ? (
             <LoadingState />
           ) : error && !rows.length ? (

@@ -457,6 +457,8 @@ body {
 .table-scroll {
   position: relative;
   -webkit-overflow-scrolling: touch;
+  max-height: min(32rem, 70dvh);
+  overflow-y: auto;
 }
 
 .table-scroll::after {
@@ -467,8 +469,8 @@ body {
   bottom: 0;
   width: 1.5rem;
   pointer-events: none;
-  background: linear-gradient(to left, var(--card), transparent);
-  opacity: 0.85;
+  background: linear-gradient(to left, color-mix(in oklab, var(--card) 88%, transparent), transparent);
+  opacity: 0.9;
 }
 
 @media (min-width: 768px) {
@@ -580,18 +582,6 @@ body {
 .glass-panel table {
   border-collapse: separate;
   border-spacing: 0;
-}
-
-.glass-panel thead tr {
-  background: rgba(245, 200, 66, 0.03);
-}
-
-.glass-panel tbody tr {
-  transition: background 150ms ease;
-}
-
-.glass-panel tbody tr:hover {
-  background: rgba(245, 200, 66, 0.04);
 }
 
 /* ── Form fields ── */

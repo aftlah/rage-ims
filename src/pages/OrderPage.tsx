@@ -270,12 +270,14 @@ export function OrderPage() {
                     const used = itemTotals[normItemName(item.name)] || 0
                     return (
                       <TableRow key={item.name}>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell className="text-primary">
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell className="font-mono tabular-nums text-foreground/90">
                           {fmtUsd(getDisplayPrice(item, catalog, role))}
                         </TableCell>
-                        <TableCell>{max == null ? '—' : max}</TableCell>
-                        <TableCell>{used}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {max == null ? '—' : max}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{used}</TableCell>
                       </TableRow>
                     )
                   })}
@@ -319,7 +321,9 @@ export function OrderPage() {
                             {line.kategori}
                           </div>
                         </TableCell>
-                        <TableCell>{fmtUsd(line.price)}</TableCell>
+                        <TableCell className="font-mono tabular-nums text-muted-foreground">
+                          {fmtUsd(line.price)}
+                        </TableCell>
                         <TableCell>
                           <Input
                             type="number"
@@ -331,7 +335,7 @@ export function OrderPage() {
                             className="w-16 text-center"
                           />
                         </TableCell>
-                        <TableCell className="text-primary">
+                        <TableCell className="font-mono tabular-nums">
                           {fmtUsd(line.price * line.qty)}
                         </TableCell>
                         <TableCell className="text-right">

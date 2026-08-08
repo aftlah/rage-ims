@@ -306,7 +306,7 @@ export function CatalogPage() {
                     <CardDescription>{rows.length} item</CardDescription>
                   </div>
                 </CardHeader>
-                <CardContent className="px-0 pt-0">
+                <CardContent className="px-4 pb-4 pt-0">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -330,14 +330,20 @@ export function CatalogPage() {
                               </div>
                             ) : null}
                           </TableCell>
-                          <TableCell>{fmtUsd(it.price)}</TableCell>
-                          <TableCell className="text-primary">
+                          <TableCell className="font-mono tabular-nums text-muted-foreground">
+                            {fmtUsd(it.price)}
+                          </TableCell>
+                          <TableCell className="font-mono tabular-nums">
                             {fmtUsd(
                               getEffectivePrice(String(it.kategori), it.price),
                             )}
                           </TableCell>
-                          <TableCell>{it.scrap ?? '—'}</TableCell>
-                          <TableCell>{it.max_limit ?? '—'}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {it.scrap ?? '—'}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {it.max_limit ?? '—'}
+                          </TableCell>
                           <TableCell>
                             <Badge
                               variant={it.is_active ? 'default' : 'destructive'}
