@@ -13,6 +13,7 @@ import {
   summarizeByUser,
   summarizeFiltered,
   updateOrderDelivered,
+  updatePersonOrderPaid,
   type DeliveredFilter,
   type OrderRow,
 } from '../../lib/rekapOrders'
@@ -135,6 +136,35 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
     [isAdmin],
   )
 
+  const togglePaid = useCallback(
+    async (row: OrderRow, actor?: string) => {
+      if (!isAdmin) return
+      setBusyId(row.id)
+      setMessage(null)
+      const next = !row.paid
+      const result = await updatePersonOrderPaid({
+        nama: row.nama,
+        orderanke: row.orderanke,
+        paid: next,
+        actor,
+      })
+      setBusyId(null)
+      if (!result.ok) {
+        setMessage(result.error)
+        return
+      }
+      setRows((prev) =>
+        prev.map((r) =>
+          r.nama === row.nama && r.orderanke === row.orderanke
+            ? { ...r, paid: next }
+            : r,
+        ),
+      )
+      setMessage(next ? 'Pembayaran: Lunas' : 'Pembayaran: Belum lunas')
+    },
+    [isAdmin],
+  )
+
   const archiveRow = useCallback(
     async (row: OrderRow) => {
       if (!isAdmin) return
@@ -178,6 +208,7 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
     batches,
     refresh,
     toggleDelivered,
+    togglePaid,
     archiveRow,
   }
 }

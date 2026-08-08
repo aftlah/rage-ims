@@ -268,8 +268,9 @@ async function maybeAnnounceOrderWindowOpen(
       endTime: row.end_time,
       kind: 'open',
     })
-    await postDiscord({ channel: 'order_window', content: msg })
-    await markAnnounced(row.id, 'announced_open')
+    const mid = await postDiscord({ channel: 'order_window', content: msg })
+    // Only lock announce flag after a real post — otherwise expire/open can retry
+    if (mid) await markAnnounced(row.id, 'announced_open')
   } catch (e) {
     console.warn('[discord] window open', e)
   }
@@ -296,8 +297,8 @@ async function maybeAnnounceOrderWindowClose(
       endTime: row.end_time,
       kind: 'close',
     })
-    await postDiscord({ channel: 'order_window', content: msg })
-    await markAnnounced(row.id, 'announced_close')
+    const mid = await postDiscord({ channel: 'order_window', content: msg })
+    if (mid) await markAnnounced(row.id, 'announced_close')
   } catch (e) {
     console.warn('[discord] window close', e)
   }

@@ -238,18 +238,123 @@ export async function updateOrderDelivered(
   return { ok: true }
 }
 
-/** Soft-delete archive — mirror softDeleteById("orders") + Discord delete. */
+/** Toggle paid for all active rows of a person in a periode (+ Discord log). */
+export async function updatePersonOrderPaid(args: {
+  nama: string
+  orderanke: number
+  paid: boolean
+  actor?: string
+}): Promise<{ ok: true; qty: number; total: number } | { ok: false; error: string }> {
+  const nama = String(args.nama || '').trim()
+  const orderanke = Number(args.orderanke) || 0
+  if (!nama || !orderanke) {
+    return { ok: false, error: 'Nama / periode tidak valid' }
+  }
+
+  let q = supabase
+    .from('orders')
+    .update({ paid: !!args.paid })
+    .eq('nama', nama)
+    .eq('orderanke', orderanke)
+    .is('deleted_at', null)
+    .select('id,qty,subtotal')
+
+  let { data, error } = await q
+  if (error && isMissingColumnError(error, 'deleted_at')) {
+    ;({ data, error } = await supabase
+      .from('orders')
+      .update({ paid: !!args.paid })
+      .eq('nama', nama)
+      .eq('orderanke', orderanke)
+      .select('id,qty,subtotal'))
+  }
+  if (error) {
+    if (String(error.message || '').includes('paid')) {
+      return { ok: false, error: "Kolom 'paid' belum ada di orders" }
+    }
+    return { ok: false, error: error.message }
+  }
+  if (!data?.length) {
+    return { ok: false, error: 'Tidak ada baris order yang diubah' }
+  }
+
+  const qty = data.reduce((s, r) => s + (Number(r.qty) || 0), 0)
+  const total = data.reduce((s, r) => s + (Number(r.subtotal) || 0), 0)
+
+  try {
+    const { postDiscord } = await import('./discord')
+    const { fmtDiscordMoney, fmtDiscordNumber } = await import(
+      './discordMessages'
+    )
+    const m = Math.floor(orderanke / 10)
+    const w = orderanke % 10
+    const batchText = `M${m}-W${w} (#${orderanke})`
+    const statusText = args.paid ? 'LUNAS ✅' : 'BELUM LUNAS ❌'
+    const actor = String(args.actor || '').trim() || 'Unknown'
+    const embed = {
+      title: 'Status Pembayaran Senjata',
+      color: args.paid ? 5763719 : 15548997,
+      description:
+        '```' +
+        `\nNAMA        : ${nama}` +
+        `\nPERIODE     : ${batchText}` +
+        `\nSTATUS      : ${statusText}` +
+        `\nTOTAL ITEM  : ${fmtDiscordNumber(qty)}` +
+        `\nTOTAL UANG  : ${fmtDiscordMoney(total)}` +
+        `\nDIUBAH OLEH : ${actor}` +
+        '\n```',
+      fields: [
+        {
+          name: 'Ringkasan',
+          value: args.paid
+            ? 'Pembayaran order senjata sudah dikonfirmasi lunas.'
+            : 'Status pembayaran order senjata diubah menjadi belum lunas.',
+          inline: false,
+        },
+      ],
+      timestamp: new Date().toISOString(),
+    }
+    await postDiscord({ channel: 'order_payment', embeds: [embed] })
+  } catch (e) {
+    console.warn('[discord] payment toggle', e)
+  }
+
+  return { ok: true, qty, total }
+}
+
+/** Soft-delete archive — mirror softDeleteById("orders") + Discord sync. */
 export async function archiveOrderById(
   id: number,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const rowId = Number(id)
   if (!rowId) return { ok: false, error: 'ID tidak valid' }
 
-  try {
-    const { deleteDiscordForTableRow } = await import('./discord')
-    await deleteDiscordForTableRow('orders', 'orders', rowId)
-  } catch (e) {
-    console.warn('[discord] order archive', e)
+  // Snapshot before delete — Discord mid is shared per member+periode
+  let memberId = 0
+  let orderanke = 0
+  let nama = ''
+  let prevDiscordId = ''
+  {
+    let { data: before, error: beforeErr } = await supabase
+      .from('orders')
+      .select('id,member_id,orderanke,nama,discord_message_id')
+      .eq('id', rowId)
+      .maybeSingle()
+    if (beforeErr && isMissingColumnError(beforeErr, 'discord_message_id')) {
+      ;({ data: before } = await supabase
+        .from('orders')
+        .select('id,member_id,orderanke,nama')
+        .eq('id', rowId)
+        .maybeSingle())
+    }
+    if (before) {
+      memberId = Number(before.member_id) || 0
+      orderanke = Number(before.orderanke) || 0
+      nama = String(before.nama || '')
+      prevDiscordId = String(
+        (before as { discord_message_id?: string }).discord_message_id || '',
+      ).trim()
+    }
   }
 
   const now = new Date().toISOString()
@@ -274,5 +379,31 @@ export async function archiveOrderById(
       error: 'Tidak ada baris terhapus (cek RLS/permission update di orders)',
     }
   }
+
+  // Discord: if siblings remain → re-post updated summary; else delete channel msg
+  try {
+    if (memberId && orderanke) {
+      const { data: siblings } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('member_id', memberId)
+        .eq('orderanke', orderanke)
+        .is('deleted_at', null)
+        .limit(1)
+      if (siblings?.length) {
+        const { sendMemberOrdersDiscord } = await import('./discord')
+        await sendMemberOrdersDiscord(memberId, nama, orderanke)
+      } else if (prevDiscordId) {
+        const { deleteDiscordMessage } = await import('./discord')
+        await deleteDiscordMessage('orders', prevDiscordId)
+      }
+    } else if (prevDiscordId) {
+      const { deleteDiscordMessage } = await import('./discord')
+      await deleteDiscordMessage('orders', prevDiscordId)
+    }
+  } catch (e) {
+    console.warn('[discord] order archive', e)
+  }
+
   return { ok: true }
 }

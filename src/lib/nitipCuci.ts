@@ -383,6 +383,44 @@ export async function toggleNitipPaid(
     }
     return { ok: false, error: error.message }
   }
+
+  // Patch Discord embed footer (✅ / ⏳) — soft-fail
+  try {
+    const { data: row } = await supabase
+      .from('nitip_cuci_logs')
+      .select(
+        'id,nama,uang_merah,uang_putih,keterangan,periode_orderanke,waktu,image_url,discord_message_id,is_paid',
+      )
+      .eq('id', id)
+      .maybeSingle()
+    const mid = String(row?.discord_message_id || '').trim()
+    if (row && mid) {
+      const { patchDiscord } = await import('./discord')
+      const { buildNitipCuciDiscordPayload } = await import('./discordMessages')
+      const periodeLabel = row.periode_orderanke
+        ? formatOrderankeLabel(Number(row.periode_orderanke))
+        : undefined
+      const { content, embeds } = buildNitipCuciDiscordPayload({
+        nama: String(row.nama || ''),
+        uangMerah: Number(row.uang_merah) || 0,
+        uangPutih: Number(row.uang_putih) || 0,
+        keterangan: String(row.keterangan || 'Nitip cuci'),
+        periodeLabel,
+        waktu: row.waktu ? String(row.waktu) : undefined,
+        imageUrl: row.image_url ? String(row.image_url) : null,
+        isPaid: !!nextStatus,
+      })
+      await patchDiscord({
+        channel: 'nitip_cuci',
+        messageId: mid,
+        content,
+        embeds,
+      })
+    }
+  } catch (e) {
+    console.warn('[discord] nitip paid patch', e)
+  }
+
   return { ok: true, error: null }
 }
 

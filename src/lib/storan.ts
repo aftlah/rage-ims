@@ -293,6 +293,16 @@ async function softDeleteOtherStoranLogs(
     .map((r) => r.id)
     .filter(Boolean)
   if (!ids.length) return
+
+  try {
+    const { deleteDiscordForTableRow } = await import('./discord')
+    for (const id of ids) {
+      await deleteDiscordForTableRow('storan', 'storan_logs', id)
+    }
+  } catch (e) {
+    console.warn('[discord] storan sibling cleanup', e)
+  }
+
   const soft = await softDeleteByIds('storan_logs', ids)
   if (!soft.ok && soft.error && isMissingColumnError(soft.error, 'deleted_at')) {
     await supabase.from('storan_logs').delete().in('id', ids)

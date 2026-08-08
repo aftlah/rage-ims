@@ -70,6 +70,7 @@ export function RekapPage() {
     batches,
     refresh,
     toggleDelivered,
+    togglePaid,
     archiveRow,
   } = useRekapOrders({
     isAdmin,
@@ -342,7 +343,8 @@ export function RekapPage() {
                       <TableHead>Item</TableHead>
                       <TableHead className="text-center">Qty</TableHead>
                       <TableHead className="text-right">Subtotal</TableHead>
-                      <TableHead className="text-center">Status</TableHead>
+                      <TableHead className="text-center">Delivered</TableHead>
+                      <TableHead className="text-center">Bayar</TableHead>
                       {isAdmin ? (
                         <TableHead className="text-right">Aksi</TableHead>
                       ) : null}
@@ -380,6 +382,24 @@ export function RekapPage() {
                               variant={row.delivered ? 'default' : 'secondary'}
                             >
                               {row.delivered ? 'Sudah' : 'Belum'}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {isAdmin ? (
+                            <Button
+                              variant={row.paid ? 'default' : 'outline'}
+                              size="sm"
+                              disabled={busyId === row.id}
+                              onClick={() =>
+                                void togglePaid(row, member?.nama || undefined)
+                              }
+                            >
+                              {row.paid ? 'Lunas' : 'Belum'}
+                            </Button>
+                          ) : (
+                            <Badge variant={row.paid ? 'default' : 'secondary'}>
+                              {row.paid ? 'Lunas' : 'Belum'}
                             </Badge>
                           )}
                         </TableCell>

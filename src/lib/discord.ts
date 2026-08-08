@@ -201,8 +201,8 @@ export async function sendMemberOrdersDiscord(
 
   for (let i = 0; i < 3; i += 1) {
     const fields = includeDelivered
-      ? 'id,order_id,order_no,nama,orderanke,waktu,kategori,item,harga,qty,subtotal,delivered'
-      : 'id,order_id,order_no,nama,orderanke,waktu,kategori,item,harga,qty,subtotal'
+      ? 'id,order_id,order_no,nama,orderanke,waktu,kategori,item,harga,qty,subtotal,delivered,discord_message_id'
+      : 'id,order_id,order_no,nama,orderanke,waktu,kategori,item,harga,qty,subtotal,discord_message_id'
     let q = supabase
       .from('orders')
       .select(fields)
@@ -219,6 +219,24 @@ export async function sendMemberOrdersDiscord(
       filterActiveOnly = false
       continue
     }
+    if (isMissingColumnError(qError, 'discord_message_id')) {
+      // Retry without discord column
+      const fieldsLite = includeDelivered
+        ? 'id,order_id,order_no,nama,orderanke,waktu,kategori,item,harga,qty,subtotal,delivered'
+        : 'id,order_id,order_no,nama,orderanke,waktu,kategori,item,harga,qty,subtotal'
+      let q2 = supabase
+        .from('orders')
+        .select(fieldsLite)
+        .eq('member_id', memberId)
+        .eq('orderanke', orderanke)
+        .order('waktu', { ascending: false })
+        .limit(200)
+      if (filterActiveOnly) q2 = q2.is('deleted_at', null)
+      const res2 = await q2
+      items = (res2.data as Record<string, unknown>[] | null) || null
+      qError = res2.error
+      break
+    }
     if (String(qError.message || '').includes('delivered')) {
       includeDelivered = false
       continue
@@ -227,6 +245,16 @@ export async function sendMemberOrdersDiscord(
   }
 
   if (qError || !items?.length) return null
+
+  // Delete previous shared summary so re-submit / archive-repost doesn't orphan msgs
+  const prevIds = new Set(
+    items
+      .map((r) => normalizeDiscordMessageId(r.discord_message_id as string))
+      .filter(Boolean),
+  )
+  for (const prev of prevIds) {
+    await deleteDiscordMessage('orders', prev)
+  }
 
   const { buildOrderDiscordMessage } = await import('./discordMessages')
   const mapped = items.map((r) => {
