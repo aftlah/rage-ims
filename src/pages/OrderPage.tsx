@@ -137,7 +137,7 @@ export function OrderPage() {
           </div>
 
           {orderWindow && isOpen ? (
-            <dl className="grid gap-2.5 sm:grid-cols-3">
+            <dl className="grid grid-cols-2 gap-2.5">
               <div className="rounded-xl border border-border/50 bg-muted/15 px-3 py-2.5">
                 <dt className="text-[10px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
                   Buka
@@ -152,14 +152,6 @@ export function OrderPage() {
                 </dt>
                 <dd className="mt-1 text-sm leading-snug font-medium text-foreground">
                   {formatWindowDateTimeCompact(orderWindow.end_time)}
-                </dd>
-              </div>
-              <div className="rounded-xl border border-border/50 bg-muted/15 px-3 py-2.5">
-                <dt className="text-[10px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
-                  Periode
-                </dt>
-                <dd className="mt-1 text-sm leading-snug font-medium text-foreground">
-                  {formatOrderankeLabel(orderWindow.orderanke)}
                 </dd>
               </div>
             </dl>
