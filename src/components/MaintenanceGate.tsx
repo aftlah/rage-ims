@@ -141,18 +141,64 @@ function MaintenanceScreen({ message }: { message: string }) {
         </header>
 
         <footer className="maintenance-footer">
-          {!soundOn ? (
-            <button
+          <div className="maintenance-sound-panel">
+            <Button
               type="button"
-              className="maintenance-sound-prompt"
+              size="icon-sm"
+              variant={soundOn ? 'secondary' : 'default'}
+              className="maintenance-sound-panel-toggle"
+              aria-label={soundOn ? 'Matikan suara' : 'Nyalakan suara'}
               onPointerDown={(e) => {
                 e.preventDefault()
-                unlockSound()
+                toggleSound()
               }}
             >
-              <Volume2 className="size-4" />
-              Tap untuk nyalain suara
-            </button>
+              {soundOn ? (
+                <VolumeX className="size-4" />
+              ) : (
+                <Volume2 className="size-4" />
+              )}
+            </Button>
+
+            <div className="maintenance-sound-volume">
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                className="maintenance-sound-panel-btn"
+                disabled={volume <= VOLUME_MIN}
+                aria-label="Kecilkan suara"
+                onPointerDown={(e) => {
+                  e.preventDefault()
+                  applyVolume(volume - VOLUME_STEP)
+                }}
+              >
+                <Minus className="size-4" />
+              </Button>
+
+              <span className="maintenance-sound-level" aria-live="polite">
+                {volumePercent}%
+              </span>
+
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                className="maintenance-sound-panel-btn"
+                disabled={volume >= VOLUME_MAX}
+                aria-label="Besarkan suara"
+                onPointerDown={(e) => {
+                  e.preventDefault()
+                  applyVolume(volume + VOLUME_STEP)
+                }}
+              >
+                <Plus className="size-4" />
+              </Button>
+            </div>
+          </div>
+
+          {!soundOn ? (
+            <p className="maintenance-sound-hint">Tap speaker untuk nyalain suara</p>
           ) : null}
 
           {soundError ? (
@@ -168,65 +214,6 @@ function MaintenanceScreen({ message }: { message: string }) {
             Butuh akses darurat? Hubungi admin R.A.G.E lewat Discord.
           </p>
         </footer>
-      </div>
-
-      <div className="maintenance-sound-panel">
-        <Button
-          type="button"
-          size="icon-sm"
-          variant="secondary"
-          className="maintenance-sound-panel-btn"
-          disabled={volume <= VOLUME_MIN}
-          aria-label="Kecilkan suara"
-          onPointerDown={(e) => {
-            e.preventDefault()
-            applyVolume(volume - VOLUME_STEP)
-          }}
-        >
-          <Minus className="size-4" />
-        </Button>
-
-        <span className="maintenance-sound-level" aria-live="polite">
-          {volumePercent}%
-        </span>
-
-        <Button
-          type="button"
-          size="icon-sm"
-          variant="secondary"
-          className="maintenance-sound-panel-btn"
-          disabled={volume >= VOLUME_MAX}
-          aria-label="Besarkan suara"
-          onPointerDown={(e) => {
-            e.preventDefault()
-            applyVolume(volume + VOLUME_STEP)
-          }}
-        >
-          <Plus className="size-4" />
-        </Button>
-
-        <Button
-          type="button"
-          size="sm"
-          variant={soundOn ? 'secondary' : 'default'}
-          className="maintenance-sound-panel-toggle"
-          onPointerDown={(e) => {
-            e.preventDefault()
-            toggleSound()
-          }}
-        >
-          {soundOn ? (
-            <>
-              <VolumeX className="size-4" />
-              Matikan
-            </>
-          ) : (
-            <>
-              <Volume2 className="size-4" />
-              Suara
-            </>
-          )}
-        </Button>
       </div>
     </div>
   )

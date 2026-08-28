@@ -331,25 +331,11 @@ body {
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
 }
 
-.maintenance-sound-prompt {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin-bottom: 0.25rem;
-  border: 1px solid rgba(251, 191, 36, 0.45);
-  border-radius: 9999px;
-  background: rgba(12, 10, 8, 0.72);
-  padding: 0.45rem 0.9rem;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: #fcd34d;
-  backdrop-filter: blur(8px);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.maintenance-sound-prompt:hover {
-  background: rgba(245, 196, 88, 0.18);
+.maintenance-sound-hint {
+  margin: 0;
+  font-size: 0.6875rem;
+  color: rgba(252, 211, 77, 0.75);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.8);
 }
 
 .maintenance-badge {
@@ -379,33 +365,41 @@ body {
 }
 
 .maintenance-sound-panel {
-  position: fixed;
-  top: max(1rem, env(safe-area-inset-top));
-  right: max(1rem, env(safe-area-inset-right));
-  z-index: 3;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  border: 1px solid rgba(251, 191, 36, 0.35);
+  gap: 0.5rem;
+  border: 1px solid rgba(251, 191, 36, 0.28);
   border-radius: 9999px;
-  background: rgba(12, 10, 8, 0.82);
-  padding: 0.35rem 0.45rem;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  background: rgba(12, 10, 8, 0.72);
+  padding: 0.3rem 0.45rem 0.3rem 0.3rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.maintenance-sound-volume {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  border-left: 1px solid rgba(251, 191, 36, 0.18);
+  padding-left: 0.35rem;
 }
 
 .maintenance-sound-panel-btn {
-  border: 1px solid rgba(251, 191, 36, 0.2);
-  background: rgba(245, 196, 88, 0.08);
+  color: #fcd34d;
 }
 
 .maintenance-sound-panel-btn:hover:not(:disabled) {
-  background: rgba(245, 196, 88, 0.16);
+  background: rgba(245, 196, 88, 0.12);
+  color: #fde68a;
+}
+
+.maintenance-sound-panel-btn:disabled {
+  opacity: 0.35;
 }
 
 .maintenance-sound-level {
-  min-width: 2.5rem;
-  font-size: 0.75rem;
+  min-width: 2.25rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #fcd34d;
@@ -413,8 +407,28 @@ body {
 }
 
 .maintenance-sound-panel-toggle {
-  gap: 0.35rem;
-  border: 1px solid rgba(251, 191, 36, 0.25);
+  flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .maintenance-sound-panel {
+    padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+    gap: 0.65rem;
+  }
+
+  .maintenance-sound-volume {
+    gap: 0.25rem;
+    padding-left: 0.5rem;
+  }
+
+  .maintenance-sound-level {
+    min-width: 2.5rem;
+    font-size: 0.75rem;
+  }
+
+  .maintenance-sound-hint {
+    font-size: 0.75rem;
+  }
 }
 
 @keyframes maintenance-pulse {
