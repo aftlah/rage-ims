@@ -135,6 +135,33 @@ body {
   mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black, transparent);
 }
 
+/* ── Login form inputs (large, theme-aware — no photo bg) ── */
+.login-input-lite {
+  width: 100%;
+  min-height: 3.25rem;
+  border-radius: 0.875rem;
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  background: color-mix(in oklab, var(--input) 35%, transparent);
+  padding: 0.9rem 1.15rem;
+  color: var(--foreground);
+  font-size: 1rem;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.login-input-lite::placeholder {
+  color: color-mix(in oklab, var(--muted-foreground) 75%, transparent);
+}
+
+.login-input-lite:focus {
+  border-color: color-mix(in oklab, var(--primary) 55%, transparent);
+  background: color-mix(in oklab, var(--input) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--primary) 18%, transparent);
+}
+
 /* Login floating orbs */
 .login-orbs {
   position: absolute;

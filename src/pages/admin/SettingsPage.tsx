@@ -106,7 +106,7 @@ export function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 px-4 py-3">
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 px-4 py-3">
             <div>
               <p className="text-sm font-medium">Mode maintenance</p>
               <p className="text-xs text-muted-foreground">
@@ -117,6 +117,7 @@ export function SettingsPage() {
               checked={maintOn}
               onCheckedChange={setMaintOn}
               aria-label="Toggle maintenance"
+              className="shrink-0"
             />
           </div>
           <div className="flex flex-col gap-2">
