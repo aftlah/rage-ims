@@ -201,6 +201,80 @@ body {
   50% { transform: translate(20px, -16px) scale(1.05); }
 }
 
+/* ── Maintenance screen ── */
+.maintenance-card {
+  box-shadow:
+    0 0 0 1px rgba(245, 196, 88, 0.08),
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 0 80px rgba(245, 196, 88, 0.06);
+}
+
+.maintenance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.1);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fcd34d;
+}
+
+.maintenance-badge-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: #fbbf24;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.75);
+  animation: maintenance-pulse 1.8s ease-in-out infinite;
+}
+
+.maintenance-icon-wrap {
+  display: flex;
+  height: 4rem;
+  width: 4rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  background: linear-gradient(
+    160deg,
+    rgba(251, 191, 36, 0.14),
+    rgba(255, 122, 69, 0.08)
+  );
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.12);
+}
+
+.maintenance-info-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.55rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(245, 196, 88, 0.12);
+  background: rgba(245, 196, 88, 0.05);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: color-mix(in oklab, var(--foreground) 82%, transparent);
+}
+
+@keyframes maintenance-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.88);
+  }
+}
+
 /* ── Glass panels ── */
 .glass-panel {
   position: relative;
