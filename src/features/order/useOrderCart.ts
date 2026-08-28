@@ -121,6 +121,8 @@ export function useOrderCart(args: UseOrderCartArgs) {
     }
   }, [args, cart, submitting])
 
+  const clearMessage = useCallback(() => setMessage(null), [])
+
   return {
     cart,
     totals,
@@ -131,6 +133,6 @@ export function useOrderCart(args: UseOrderCartArgs) {
     removeLine,
     clearCart,
     submit,
-    clearMessage: () => setMessage(null),
+    clearMessage,
   }
 }
