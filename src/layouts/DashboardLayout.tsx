@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/sheet'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettings } from '@/contexts/SettingsContext'
+import { BackgroundMusic } from '@/components/BackgroundMusic'
 import {
   describeOrderWindow,
   fetchActiveOrderWindow,
@@ -195,6 +196,7 @@ export function DashboardLayout() {
 
   return (
     <div className="app-shell flex h-dvh overflow-hidden">
+      {!maintenanceMode ? <BackgroundMusic /> : null}
       <aside className="m-2 mr-0 hidden h-[calc(100dvh-1rem)] w-60 shrink-0 flex-col rounded-2xl border border-border/60 bg-card/80 backdrop-blur-xl md:m-3 md:mr-0 md:flex md:h-[calc(100dvh-1.5rem)]">
         <SidebarNav visibleGroups={visibleGroups} />
         {sidebarFooter}
