@@ -9,9 +9,9 @@ let bgAudioStarted = false
 function getBackgroundAudio() {
   if (!bgAudio) {
     bgAudio = new Audio(BG_AUDIO_SRC)
-    bgAudio.loop = true
     bgAudio.preload = 'auto'
   }
+  bgAudio.loop = true
   return bgAudio
 }
 
@@ -23,6 +23,7 @@ export function BackgroundMusic() {
   useEffect(() => {
     const audio = getBackgroundAudio()
     audio.volume = BACKGROUND_VOLUME
+    audio.loop = true
 
     const tryPlay = () => {
       void audio.play().then(() => {
@@ -32,6 +33,12 @@ export function BackgroundMusic() {
 
     const resumeIfNeeded = () => {
       if (!bgAudioStarted || !audio.paused) return
+      void audio.play().catch(() => {})
+    }
+
+    const onEnded = () => {
+      if (!bgAudioStarted) return
+      audio.currentTime = 0
       void audio.play().catch(() => {})
     }
 
@@ -45,6 +52,7 @@ export function BackgroundMusic() {
 
     tryPlay()
 
+    audio.addEventListener('ended', onEnded)
     document.addEventListener('visibilitychange', onVisibility)
     window.addEventListener('pageshow', onPageShow)
 
@@ -53,6 +61,7 @@ export function BackgroundMusic() {
     document.addEventListener('keydown', unlock, { once: true })
 
     return () => {
+      audio.removeEventListener('ended', onEnded)
       document.removeEventListener('visibilitychange', onVisibility)
       window.removeEventListener('pageshow', onPageShow)
       document.removeEventListener('pointerdown', unlock)
