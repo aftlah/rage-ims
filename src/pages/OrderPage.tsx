@@ -42,7 +42,7 @@ import {
   getItemMax,
   type CatalogCategory,
 } from '@/lib/catalog'
-import { fmtUsd } from '@/lib/format'
+import { fmtUsd, formatWindowDateTimeCompact } from '@/lib/format'
 import { formatOrderankeLabel } from '@/lib/orderWindow'
 import { normItemName } from '@/lib/orderUtils'
 
@@ -124,8 +124,8 @@ export function OrderPage() {
       </PageHeader>
 
       <Card className="border-border/60 bg-card/80">
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap items-center gap-3">
+        <CardContent className="space-y-4 pt-6">
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant={isOpen ? 'default' : 'destructive'}>
               {statusText}
             </Badge>
@@ -134,23 +134,60 @@ export function OrderPage() {
                 {formatOrderankeLabel(orderWindow.orderanke)}
               </Badge>
             ) : null}
-            <span className="text-[11px] text-muted-foreground">
+          </div>
+
+          {orderWindow && isOpen ? (
+            <dl className="grid gap-2.5 sm:grid-cols-3">
+              <div className="rounded-xl border border-border/50 bg-muted/15 px-3 py-2.5">
+                <dt className="text-[10px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
+                  Buka
+                </dt>
+                <dd className="mt-1 text-sm leading-snug font-medium text-foreground">
+                  {formatWindowDateTimeCompact(orderWindow.start_time)}
+                </dd>
+              </div>
+              <div className="rounded-xl border border-border/50 bg-muted/15 px-3 py-2.5">
+                <dt className="text-[10px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
+                  Tutup
+                </dt>
+                <dd className="mt-1 text-sm leading-snug font-medium text-foreground">
+                  {formatWindowDateTimeCompact(orderWindow.end_time)}
+                </dd>
+              </div>
+              <div className="rounded-xl border border-border/50 bg-muted/15 px-3 py-2.5">
+                <dt className="text-[10px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
+                  Periode
+                </dt>
+                <dd className="mt-1 text-sm leading-snug font-medium text-foreground">
+                  {formatOrderankeLabel(orderWindow.orderanke)}
+                </dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="text-sm text-muted-foreground">{detailText}</p>
+          )}
+
+          <div className="space-y-2 border-t border-border/50 pt-3">
+            <p className="text-xs text-muted-foreground">
               {isAdmin
                 ? 'Harga admin (tanpa markup 10%)'
                 : 'Gun/Attachment sudah include markup 10%'}
-            </span>
+            </p>
+
+            {!member?.id ? (
+              <p className="text-xs text-destructive">
+                Akun belum terhubung ke member — submit tidak bisa.
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Pemesan:{' '}
+                <span className="font-semibold text-foreground">
+                  {member.nama}
+                </span>
+                <span className="text-muted-foreground/80"> · {member.role}</span>
+              </p>
+            )}
           </div>
-          <p className="mt-3 text-sm text-muted-foreground">{detailText}</p>
-          {!member?.id ? (
-            <p className="mt-2 text-xs text-destructive">
-              Akun belum terhubung ke member — submit tidak bisa.
-            </p>
-          ) : (
-            <p className="mt-2 text-xs text-muted-foreground">
-              Pemesan: <span className="text-foreground">{member.nama}</span> ·{' '}
-              {member.role}
-            </p>
-          )}
         </CardContent>
       </Card>
 

@@ -35,3 +35,14 @@ export function formatWindowDateTime(iso: string): string {
     hour12: true,
   })
 }
+
+/** Compact date/time for cards and mobile layouts */
+export function formatWindowDateTimeCompact(iso: string): string {
+  return new Date(iso).toLocaleString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
