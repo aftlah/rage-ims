@@ -378,20 +378,43 @@ body {
   animation: maintenance-pulse 1.8s ease-in-out infinite;
 }
 
-.maintenance-sound-btn {
+.maintenance-sound-panel {
   position: fixed;
   top: max(1rem, env(safe-area-inset-top));
   right: max(1rem, env(safe-area-inset-right));
   z-index: 3;
-  gap: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 9999px;
   background: rgba(12, 10, 8, 0.82);
+  padding: 0.35rem 0.45rem;
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
-.maintenance-sound-btn:hover {
+.maintenance-sound-panel-btn {
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  background: rgba(245, 196, 88, 0.08);
+}
+
+.maintenance-sound-panel-btn:hover:not(:disabled) {
   background: rgba(245, 196, 88, 0.16);
+}
+
+.maintenance-sound-level {
+  min-width: 2.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #fcd34d;
+  text-align: center;
+}
+
+.maintenance-sound-panel-toggle {
+  gap: 0.35rem;
+  border: 1px solid rgba(251, 191, 36, 0.25);
 }
 
 @keyframes maintenance-pulse {

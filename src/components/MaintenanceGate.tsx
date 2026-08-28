@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Volume2, VolumeX } from 'lucide-react'
+import { Minus, Plus, Volume2, VolumeX } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { LoadingState } from '@/components/ui/StatusBlock'
@@ -7,7 +7,10 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useSettings } from '@/contexts/SettingsContext'
 
 const DEFAULT_DETAIL = 'Sebentar yaa kawan — kami lagi perbaiki sistem supaya lebih enak dipakai.'
-const MAINTENANCE_VOLUME = 0.5
+const DEFAULT_VOLUME = 0.25
+const VOLUME_STEP = 0.1
+const VOLUME_MIN = 0.1
+const VOLUME_MAX = 1
 
 function parseMaintenanceMessage(raw: string) {
   const message = raw.trim()
@@ -32,7 +35,15 @@ function MaintenanceScreen({ message }: { message: string }) {
   const { label, detail } = parseMaintenanceMessage(message)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [soundOn, setSoundOn] = useState(false)
+  const [volume, setVolume] = useState(DEFAULT_VOLUME)
   const [soundError, setSoundError] = useState<string | null>(null)
+
+  const applyVolume = useCallback((next: number) => {
+    const clamped = Math.min(VOLUME_MAX, Math.max(VOLUME_MIN, next))
+    setVolume(clamped)
+    const video = videoRef.current
+    if (video) video.volume = clamped
+  }, [])
 
   useEffect(() => {
     const video = videoRef.current
@@ -40,8 +51,15 @@ function MaintenanceScreen({ message }: { message: string }) {
 
     video.muted = true
     video.defaultMuted = true
+    video.volume = DEFAULT_VOLUME
     void video.play().catch(() => {})
   }, [])
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !soundOn) return
+    video.volume = volume
+  }, [soundOn, volume])
 
   const unlockSound = useCallback(() => {
     const video = videoRef.current
@@ -52,7 +70,7 @@ function MaintenanceScreen({ message }: { message: string }) {
 
     setSoundError(null)
     video.muted = false
-    video.volume = MAINTENANCE_VOLUME
+    video.volume = volume
     video.defaultMuted = false
 
     const videoPlay = video.play()
@@ -68,7 +86,7 @@ function MaintenanceScreen({ message }: { message: string }) {
     } else {
       setSoundOn(true)
     }
-  }, [])
+  }, [volume])
 
   const muteSound = useCallback(() => {
     const video = videoRef.current
@@ -87,6 +105,8 @@ function MaintenanceScreen({ message }: { message: string }) {
     }
     unlockSound()
   }, [muteSound, soundOn, unlockSound])
+
+  const volumePercent = Math.round(volume * 100)
 
   return (
     <div className="maintenance-screen">
@@ -150,28 +170,64 @@ function MaintenanceScreen({ message }: { message: string }) {
         </footer>
       </div>
 
-      <Button
-        type="button"
-        size="sm"
-        variant={soundOn ? 'secondary' : 'default'}
-        className="maintenance-sound-btn"
-        onPointerDown={(e) => {
-          e.preventDefault()
-          toggleSound()
-        }}
-      >
-        {soundOn ? (
-          <>
-            <VolumeX className="size-4" />
-            Matikan suara
-          </>
-        ) : (
-          <>
-            <Volume2 className="size-4" />
-            Suara
-          </>
-        )}
-      </Button>
+      <div className="maintenance-sound-panel">
+        <Button
+          type="button"
+          size="icon-sm"
+          variant="secondary"
+          className="maintenance-sound-panel-btn"
+          disabled={volume <= VOLUME_MIN}
+          aria-label="Kecilkan suara"
+          onPointerDown={(e) => {
+            e.preventDefault()
+            applyVolume(volume - VOLUME_STEP)
+          }}
+        >
+          <Minus className="size-4" />
+        </Button>
+
+        <span className="maintenance-sound-level" aria-live="polite">
+          {volumePercent}%
+        </span>
+
+        <Button
+          type="button"
+          size="icon-sm"
+          variant="secondary"
+          className="maintenance-sound-panel-btn"
+          disabled={volume >= VOLUME_MAX}
+          aria-label="Besarkan suara"
+          onPointerDown={(e) => {
+            e.preventDefault()
+            applyVolume(volume + VOLUME_STEP)
+          }}
+        >
+          <Plus className="size-4" />
+        </Button>
+
+        <Button
+          type="button"
+          size="sm"
+          variant={soundOn ? 'secondary' : 'default'}
+          className="maintenance-sound-panel-toggle"
+          onPointerDown={(e) => {
+            e.preventDefault()
+            toggleSound()
+          }}
+        >
+          {soundOn ? (
+            <>
+              <VolumeX className="size-4" />
+              Matikan
+            </>
+          ) : (
+            <>
+              <Volume2 className="size-4" />
+              Suara
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   )
 }
