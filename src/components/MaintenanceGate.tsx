@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Clock, Volume2, VolumeX } from 'lucide-react'
+import { Volume2, VolumeX } from 'lucide-react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { LoadingState } from '@/components/ui/StatusBlock'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettings } from '@/contexts/SettingsContext'
@@ -90,108 +89,89 @@ function MaintenanceScreen({ message }: { message: string }) {
   }, [muteSound, soundOn, unlockSound])
 
   return (
-    <div className="app-shell relative flex min-h-dvh items-center justify-center px-4 py-8 pb-[max(2rem,env(safe-area-inset-bottom))]">
-      <div className="login-orbs" aria-hidden />
+    <div className="maintenance-screen">
+      <video
+        ref={videoRef}
+        className="maintenance-video-bg"
+        src="/video-joget.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        aria-label="Video joget maintenance R.A.G.E"
+      />
 
-      <Card className="maintenance-card relative w-full max-w-xl border-border/60 bg-card/90 text-center backdrop-blur-xl">
-        <CardHeader className="items-center gap-5 pb-2">
-          <div className="mx-auto flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28">
-            <img
-              src="/logo_rage.png"
-              alt="R.A.G.E"
-              className="h-full w-full object-contain object-center opacity-90"
-            />
-          </div>
+      <div className="maintenance-scrim" aria-hidden />
+
+      <div className="maintenance-content">
+        <header className="maintenance-header">
+          <img
+            src="/logo_rage.png"
+            alt="R.A.G.E"
+            className="maintenance-logo"
+          />
 
           <div className="maintenance-badge">
             <span className="maintenance-badge-dot" aria-hidden />
             Maintenance aktif
           </div>
 
-          <div className="space-y-3">
-            <h1 className="text-gradient-gold text-2xl font-extrabold tracking-tight sm:text-3xl">
-              {label}
-            </h1>
+          <h1 className="maintenance-title">{label}</h1>
+        </header>
 
-            <div className="maintenance-video-wrap mx-auto w-full max-w-sm">
-              <video
-                ref={videoRef}
-                className="maintenance-video"
-                src="/video-joget.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                aria-label="Video joget maintenance R.A.G.E"
-              />
+        <footer className="maintenance-footer">
+          {!soundOn ? (
+            <button
+              type="button"
+              className="maintenance-sound-prompt"
+              onPointerDown={(e) => {
+                e.preventDefault()
+                unlockSound()
+              }}
+            >
+              <Volume2 className="size-4" />
+              Tap untuk nyalain suara
+            </button>
+          ) : null}
 
-              {!soundOn ? (
-                <button
-                  type="button"
-                  className="maintenance-sound-overlay"
-                  onPointerDown={(e) => {
-                    e.preventDefault()
-                    unlockSound()
-                  }}
-                >
-                  <Volume2 className="size-8 text-amber-300" />
-                  <span className="text-sm font-bold text-foreground">
-                    Tap untuk nyalain suara
-                  </span>
-                </button>
-              ) : null}
+          {soundError ? (
+            <p className="maintenance-error">{soundError}</p>
+          ) : null}
 
-              <Button
-                type="button"
-                size="sm"
-                variant={soundOn ? 'secondary' : 'default'}
-                className="maintenance-sound-btn"
-                onPointerDown={(e) => {
-                  e.preventDefault()
-                  toggleSound()
-                }}
-              >
-                {soundOn ? (
-                  <>
-                    <VolumeX className="size-4" />
-                    Matikan suara
-                  </>
-                ) : (
-                  <>
-                    <Volume2 className="size-4" />
-                    Nyalakan suara
-                  </>
-                )}
-              </Button>
-            </div>
+          <p className="maintenance-detail">{detail}</p>
 
-            {soundError ? (
-              <p className="text-xs text-red-300">{soundError}</p>
-            ) : !soundOn ? (
-              <p className="text-xs text-amber-200/80">
-                Browser blokir autoplay — tap video atau tombol suara di bawah
-              </p>
-            ) : null}
-
-            <p className="mx-auto max-w-md text-base leading-relaxed text-foreground/90 sm:text-lg">
-              {detail}
-            </p>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4 pt-2">
-          <div className="maintenance-info-row">
-            <Clock className="size-4 shrink-0 text-amber-300/90" />
-            <span>Sistem sementara tidak bisa diakses untuk member.</span>
-          </div>
-
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Butuh akses darurat? Hubungi admin R.A.G.E lewat Discord atau
-            kontak langsung.
+          <p className="maintenance-note">
+            Sistem sementara tidak bisa diakses untuk member.
           </p>
-        </CardContent>
-      </Card>
+          <p className="maintenance-note">
+            Butuh akses darurat? Hubungi admin R.A.G.E lewat Discord.
+          </p>
+        </footer>
+      </div>
+
+      <Button
+        type="button"
+        size="sm"
+        variant={soundOn ? 'secondary' : 'default'}
+        className="maintenance-sound-btn"
+        onPointerDown={(e) => {
+          e.preventDefault()
+          toggleSound()
+        }}
+      >
+        {soundOn ? (
+          <>
+            <VolumeX className="size-4" />
+            Matikan suara
+          </>
+        ) : (
+          <>
+            <Volume2 className="size-4" />
+            Suara
+          </>
+        )}
+      </Button>
     </div>
   )
 }
