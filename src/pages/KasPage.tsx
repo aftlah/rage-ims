@@ -5,7 +5,6 @@ import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import {
   EmptyState,
   ErrorState,
-  InlineMessage,
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { Badge } from '@/components/ui/badge'
@@ -46,14 +45,15 @@ import {
   type CashType,
   type RageCashRow,
 } from '@/lib/kas'
+import { useToast } from '@/contexts/ToastContext'
 
 export function KasPage() {
+  const toast = useToast()
   const [rows, setRows] = useState<RageCashRow[]>([])
   const [balance, setBalance] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<RageCashRow | null>(null)
 
   const [type, setType] = useState<CashType>('IN')
@@ -78,8 +78,6 @@ export function KasPage() {
 
   const submit = async () => {
     setBusy(true)
-    setError(null)
-    setMessage(null)
     const res = await submitRageCash({
       type,
       amount: parseFloat(amount) || 0,
@@ -89,10 +87,10 @@ export function KasPage() {
     })
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Transaksi tersimpan')
+    toast.success('Transaksi tersimpan')
     setAmount('')
     setCategory('')
     setNote('')
@@ -107,10 +105,10 @@ export function KasPage() {
     setBusy(false)
     setDeleteTarget(null)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Catatan diarsipkan')
+    toast.success('Catatan diarsipkan')
     await refresh()
   }
 
@@ -212,11 +210,6 @@ export function KasPage() {
               Refresh
             </Button>
           </div>
-
-          {error ? <InlineMessage tone="error">{error}</InlineMessage> : null}
-          {message ? (
-            <InlineMessage tone="success">{message}</InlineMessage>
-          ) : null}
         </CardContent>
       </Card>
 

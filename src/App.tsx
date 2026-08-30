@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { SettingsProvider } from './contexts/SettingsContext'
+import { ToastProvider } from './contexts/ToastContext'
 import { AdminRoute } from './components/AdminRoute'
 import { WeeklyProfitRoute } from './components/WeeklyProfitRoute'
 import { MaintenanceGate } from './components/MaintenanceGate'
@@ -28,7 +29,8 @@ export default function App() {
     <AuthProvider>
       <SettingsProvider>
         <BrowserRouter>
-          <Routes>
+          <ToastProvider>
+            <Routes>
             <Route element={<GuestRoute />}>
               <Route path="/login" element={<LoginPage />} />
             </Route>
@@ -61,7 +63,8 @@ export default function App() {
             </Route>
 
             <Route path="*" element={<Navigate to="/home" replace />} />
-          </Routes>
+            </Routes>
+          </ToastProvider>
         </BrowserRouter>
       </SettingsProvider>
     </AuthProvider>

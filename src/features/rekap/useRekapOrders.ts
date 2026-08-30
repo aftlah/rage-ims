@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useToast } from '../../contexts/ToastContext'
 import {
   fetchCatalog,
   type CatalogByCategory,
@@ -24,6 +25,7 @@ type UseRekapOrdersArgs = {
 }
 
 export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
+  const toast = useToast()
   const [month, setMonth] = useState<number | null>(null)
   const [week, setWeek] = useState<number | null>(null)
   const [periodReady, setPeriodReady] = useState(false)
@@ -35,7 +37,6 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
   const [rows, setRows] = useState<OrderRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<number | null>(null)
 
   useEffect(() => {
@@ -120,27 +121,25 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
     async (row: OrderRow) => {
       if (!isAdmin) return
       setBusyId(row.id)
-      setMessage(null)
       const next = !row.delivered
       const result = await updateOrderDelivered(row.id, next)
       setBusyId(null)
       if (!result.ok) {
-        setMessage(result.error)
+        toast.error(result.error)
         return
       }
       setRows((prev) =>
         prev.map((r) => (r.id === row.id ? { ...r, delivered: next } : r)),
       )
-      setMessage(next ? 'Status: Sudah' : 'Status: Belum')
+      toast.success(next ? 'Status: Sudah' : 'Status: Belum')
     },
-    [isAdmin],
+    [isAdmin, toast],
   )
 
   const togglePaid = useCallback(
     async (row: OrderRow, actor?: string) => {
       if (!isAdmin) return
       setBusyId(row.id)
-      setMessage(null)
       const next = !row.paid
       const result = await updatePersonOrderPaid({
         nama: row.nama,
@@ -150,7 +149,7 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
       })
       setBusyId(null)
       if (!result.ok) {
-        setMessage(result.error)
+        toast.error(result.error)
         return
       }
       setRows((prev) =>
@@ -160,9 +159,9 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
             : r,
         ),
       )
-      setMessage(next ? 'Pembayaran: Lunas' : 'Pembayaran: Belum lunas')
+      toast.success(next ? 'Pembayaran: Lunas' : 'Pembayaran: Belum lunas')
     },
-    [isAdmin],
+    [isAdmin, toast],
   )
 
   const archiveRow = useCallback(
@@ -173,17 +172,16 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
       )
       if (!ok) return
       setBusyId(row.id)
-      setMessage(null)
       const result = await archiveOrderById(row.id)
       setBusyId(null)
       if (!result.ok) {
-        setMessage(result.error)
+        toast.error(result.error)
         return
       }
       setRows((prev) => prev.filter((r) => r.id !== row.id))
-      setMessage('Item dipindahkan ke arsip')
+      toast.success('Item dipindahkan ke arsip')
     },
-    [isAdmin],
+    [isAdmin, toast],
   )
 
   return {
@@ -200,7 +198,6 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
     catalog,
     loading: loading || !periodReady,
     error,
-    message,
     busyId,
     filtered,
     stats,

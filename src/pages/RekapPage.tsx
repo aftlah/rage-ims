@@ -31,10 +31,10 @@ import {
 import {
   EmptyState,
   ErrorState,
-  InlineMessage,
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import { useRekapOrders } from '@/features/rekap/useRekapOrders'
 import {
   shareDashboardFromRows,
@@ -49,6 +49,7 @@ const WEEKS = Array.from({ length: 5 }, (_, i) => i + 1)
 
 export function RekapPage() {
   const { member, isAdmin } = useAuth()
+  const toast = useToast()
   const {
     month,
     setMonth,
@@ -62,7 +63,6 @@ export function RekapPage() {
     setDelivered,
     loading,
     error,
-    message,
     busyId,
     filtered,
     stats,
@@ -79,7 +79,6 @@ export function RekapPage() {
 
   const [archiveTarget, setArchiveTarget] = useState<OrderRow | null>(null)
   const [shareBusy, setShareBusy] = useState(false)
-  const [shareMsg, setShareMsg] = useState<string | null>(null)
 
   const confirmArchive = async () => {
     if (!archiveTarget) return
@@ -89,26 +88,26 @@ export function RekapPage() {
 
   const handleShareDashboard = async () => {
     setShareBusy(true)
-    setShareMsg(null)
     const res = await shareDashboardFromRows(filtered, {
       month,
       week: week != null ? String(week) : undefined,
       name: isAdmin ? name || undefined : member?.nama || undefined,
     })
     setShareBusy(false)
-    setShareMsg(res.ok ? 'Ringkasan dikirim ke Discord' : res.error)
+    if (res.ok) toast.success('Ringkasan dikirim ke Discord')
+    else toast.error(res.error)
   }
 
   const handleSharePayment = async () => {
     setShareBusy(true)
-    setShareMsg(null)
     const res = await sharePaymentStatusFromRows(filtered, {
       month,
       week: week != null ? String(week) : undefined,
       name: isAdmin ? name || undefined : member?.nama || undefined,
     })
     setShareBusy(false)
-    setShareMsg(res.ok ? 'Status bayar dikirim ke Discord' : res.error)
+    if (res.ok) toast.success('Status bayar dikirim ke Discord')
+    else toast.error(res.error)
   }
 
   return (
@@ -146,20 +145,6 @@ export function RekapPage() {
           </Button>
         </div>
       </PageHeader>
-
-      {shareMsg ? (
-        <InlineMessage
-          tone={
-            shareMsg.toLowerCase().includes('gagal') ||
-            shareMsg.toLowerCase().includes('cek') ||
-            shareMsg.toLowerCase().includes('tidak ada')
-              ? 'error'
-              : 'success'
-          }
-        >
-          {shareMsg}
-        </InlineMessage>
-      ) : null}
 
       <Card className="border-border/60 bg-card/80">
         <CardContent className="pt-6">
@@ -249,7 +234,6 @@ export function RekapPage() {
         </CardContent>
       </Card>
 
-      {message ? <InlineMessage tone="success">{message}</InlineMessage> : null}
       {error ? <ErrorState message={error} /> : null}
 
       <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 lg:grid-cols-5">

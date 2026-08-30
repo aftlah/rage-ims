@@ -9,27 +9,26 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { InlineMessage } from '@/components/ui/StatusBlock'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import { cn } from '@/lib/utils'
 
 export function LoginPage() {
   const { signIn } = useAuth()
+  const toast = useToast()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    setError(null)
     setSubmitting(true)
     try {
       const result = await signIn(username, password)
       if (result.error) {
-        setError(result.error)
+        toast.error(result.error)
         return
       }
       navigate('/home', { replace: true })
@@ -116,8 +115,6 @@ export function LoginPage() {
                 </button>
               </div>
             </div>
-
-            {error ? <InlineMessage tone="error">{error}</InlineMessage> : null}
 
             <Button
               type="submit"

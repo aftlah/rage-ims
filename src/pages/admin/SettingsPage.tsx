@@ -13,12 +13,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { InlineMessage, LoadingState } from '@/components/ui/StatusBlock'
+import { ErrorState, LoadingState } from '@/components/ui/StatusBlock'
 import { useSettings } from '@/contexts/SettingsContext'
+import { useToast } from '@/contexts/ToastContext'
 import { validateAdminDeletePin } from '@/lib/appSettings'
 import { fetchMembersLite, type MemberLite } from '@/lib/membersLite'
 
 export function SettingsPage() {
+  const toast = useToast()
   const {
     maintenanceMode,
     maintenanceMessage,
@@ -42,8 +44,6 @@ export function SettingsPage() {
   const [notice, setNotice] = useState('')
   const [showPin, setShowPin] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
-  const [formError, setFormError] = useState<string | null>(null)
 
   useEffect(() => {
     setMaintOn(maintenanceMode)
@@ -91,13 +91,11 @@ export function SettingsPage() {
 
   const handleSave = async () => {
     setBusy(true)
-    setMessage(null)
-    setFormError(null)
 
     if (pin.trim()) {
       const check = validateAdminDeletePin(pin)
       if (!check.ok) {
-        setFormError(check.message)
+        toast.error(check.message)
         setBusy(false)
         return
       }
@@ -112,10 +110,10 @@ export function SettingsPage() {
     })
     setBusy(false)
     if (!res.ok) {
-      setFormError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Settings tersimpan')
+    toast.success('Settings tersimpan')
   }
 
   return (
@@ -138,9 +136,7 @@ export function SettingsPage() {
         </Button>
       </PageHeader>
 
-      {error ? <InlineMessage tone="error">{error}</InlineMessage> : null}
-      {formError ? <InlineMessage tone="error">{formError}</InlineMessage> : null}
-      {message ? <InlineMessage tone="success">{message}</InlineMessage> : null}
+      {error ? <ErrorState message={error} /> : null}
 
       <Card className="border-border/60 bg-card/80">
         <CardHeader>
@@ -253,8 +249,7 @@ export function SettingsPage() {
             </div>
           )}
           <p className="text-xs text-muted-foreground">
-            {selectedViewerIds.length} member dipilih untuk akses{' '}
-            <code>/profit-mingguan</code>
+            {selectedViewerIds.length} member dipilih untuk akses | Profit Mingguan |
           </p>
         </CardContent>
       </Card>

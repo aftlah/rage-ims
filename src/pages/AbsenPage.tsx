@@ -5,7 +5,6 @@ import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import {
   EmptyState,
   ErrorState,
-  InlineMessage,
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +34,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import {
   absenStatusLabel,
   deleteAbsenKotaRow,
@@ -74,6 +74,7 @@ function AbsenStatusBadge({
 
 export function AbsenPage() {
   const { member, isAdmin } = useAuth()
+  const toast = useToast()
   const [tanggal, setTanggal] = useState(todayDateKeyJakarta())
   const [rows, setRows] = useState<AbsenRow[]>([])
   const [openSession, setOpenSession] = useState<AbsenRow | null>(null)
@@ -81,7 +82,6 @@ export function AbsenPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AbsenRow | null>(null)
 
   const [catatan, setCatatan] = useState('')
@@ -123,8 +123,6 @@ export function AbsenPage() {
   const doSelf = async (action: 'masuk' | 'keluar') => {
     if (!member) return
     setBusy(true)
-    setError(null)
-    setMessage(null)
     const res = await recordAbsenKota({
       action,
       memberId: member.id,
@@ -135,10 +133,10 @@ export function AbsenPage() {
     })
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage(
+    toast.success(
       action === 'masuk' ? 'Masuk kota tercatat' : 'Keluar kota tercatat',
     )
     setCatatan('')
@@ -152,12 +150,10 @@ export function AbsenPage() {
     const targetId = Number(adminMemberId)
     const target = members.find((m) => m.id === targetId)
     if (!target) {
-      setError('Pilih member dulu')
+      toast.error('Pilih member dulu')
       return
     }
     setBusy(true)
-    setError(null)
-    setMessage(null)
     const res = await recordAbsenKota({
       action: adminAction,
       memberId: target.id,
@@ -168,10 +164,10 @@ export function AbsenPage() {
     })
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage(`Absen ${adminAction} untuk ${target.nama} tersimpan`)
+    toast.success(`Absen ${adminAction} untuk ${target.nama} tersimpan`)
     setAdminBukti(null)
     setAdminCatatan('')
     await refresh()
@@ -184,10 +180,10 @@ export function AbsenPage() {
     setBusy(false)
     setDeleteTarget(null)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Absen dihapus')
+    toast.success('Absen dihapus')
     await refresh()
   }
 
@@ -362,7 +358,6 @@ export function AbsenPage() {
       )}
 
       {error ? <ErrorState message={error} /> : null}
-      {message ? <InlineMessage tone="success">{message}</InlineMessage> : null}
 
       <Card className="border-border/60 bg-card/80">
         <CardHeader className="flex-row items-center justify-between space-y-0 gap-3">

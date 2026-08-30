@@ -5,7 +5,6 @@ import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import {
   EmptyState,
   ErrorState,
-  InlineMessage,
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { Badge } from '@/components/ui/badge'
@@ -13,9 +12,6 @@ import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -43,6 +39,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import {
   ADMIN_CATALOG_CATEGORIES,
   fetchAdminCatalog,
@@ -66,9 +63,9 @@ const emptyForm: CatalogUpsertInput = {
 
 export function CatalogPage() {
   const { isAdmin } = useAuth()
+  const toast = useToast()
   const [items, setItems] = useState<CatalogAdminItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState<CatalogAdminItem | null>(null)
   const [form, setForm] = useState<CatalogUpsertInput>(emptyForm)
@@ -124,15 +121,14 @@ export function CatalogPage() {
 
   async function handleSave() {
     setSaving(true)
-    setMessage(null)
     const res = await upsertCatalogItem(form, editing?.id)
     setSaving(false)
     if (!res.ok) {
-      setMessage(res.error)
+      toast.error(res.error)
       return
     }
     setDialogOpen(false)
-    setMessage('Berhasil disimpan')
+    toast.success('Berhasil disimpan')
     await refresh()
   }
 
@@ -144,10 +140,10 @@ export function CatalogPage() {
     )
     setToggleTarget(null)
     if (!res.ok) {
-      setMessage(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage(
+    toast.success(
       `Item ${!toggleTarget.is_active ? 'diaktifkan' : 'dinonaktifkan'}`,
     )
     await refresh()
@@ -171,7 +167,6 @@ export function CatalogPage() {
         </Button>
       </PageHeader>
 
-      {message ? <InlineMessage tone="success">{message}</InlineMessage> : null}
       {error ? <ErrorState message={error} /> : null}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -296,18 +291,21 @@ export function CatalogPage() {
 
       {loading ? <LoadingState message="Memuat katalog…" /> : null}
 
-      {!loading
-        ? Object.entries(grouped).map(([cat, rows]) =>
-            rows.length ? (
-              <Card key={cat} className="border-border/60 bg-card/80">
-                <CardHeader className="flex-row items-center justify-between space-y-0">
-                  <div>
-                    <CardTitle className="text-primary">{cat}</CardTitle>
-                    <CardDescription>{rows.length} item</CardDescription>
+      {!loading && items.length ? (
+        <Card className="border-border/60 bg-card/80 [--card-spacing:--spacing(3)]">
+          <CardContent className="px-0 pb-3 pt-3">
+            {Object.entries(grouped).map(([cat, rows]) =>
+              rows.length ? (
+                <section key={cat} className="not-first:mt-3">
+                  <div className="flex items-baseline gap-2 border-b border-border/40 px-3 pb-1.5 sm:px-4">
+                    <h3 className="text-sm font-semibold text-primary">{cat}</h3>
+                    <span className="text-xs text-muted-foreground">
+                      {rows.length} item
+                    </span>
                   </div>
-                </CardHeader>
-                <CardContent className="px-4 pb-4 pt-0">
-                  <Table>
+                  <Table
+                    containerClassName="rounded-none border-0 shadow-none [&_th]:h-8 [&_th]:py-1 [&_td]:py-1.5"
+                  >
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nama</TableHead>
@@ -322,10 +320,10 @@ export function CatalogPage() {
                     <TableBody>
                       {rows.map((it) => (
                         <TableRow key={it.id}>
-                          <TableCell>
-                            <div className="font-medium">{it.name}</div>
+                          <TableCell className="whitespace-normal">
+                            <div className="font-medium leading-tight">{it.name}</div>
                             {it.metadata?.note ? (
-                              <div className="text-xs text-muted-foreground">
+                              <div className="mt-0.5 text-xs leading-tight text-muted-foreground">
                                 {it.metadata.note}
                               </div>
                             ) : null}
@@ -347,15 +345,17 @@ export function CatalogPage() {
                           <TableCell>
                             <Badge
                               variant={it.is_active ? 'default' : 'destructive'}
+                              className="text-[10px]"
                             >
                               {it.is_active ? 'Aktif' : 'Off'}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
+                            <div className="flex justify-end gap-1">
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                className="h-7 px-2"
                                 onClick={() => openEdit(it)}
                               >
                                 Edit
@@ -363,9 +363,10 @@ export function CatalogPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
+                                className="h-7 px-2"
                                 onClick={() => setToggleTarget(it)}
                               >
-                                {it.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+                                {it.is_active ? 'Off' : 'On'}
                               </Button>
                             </div>
                           </TableCell>
@@ -373,14 +374,15 @@ export function CatalogPage() {
                       ))}
                     </TableBody>
                   </Table>
-                  <p className="px-6 pt-2 text-xs text-muted-foreground">
-                    *Harga jual non-admin (Gun/Attachment × 1.1)
-                  </p>
-                </CardContent>
-              </Card>
-            ) : null,
-          )
-        : null}
+                </section>
+              ) : null,
+            )}
+            <p className="px-3 pt-2 text-xs text-muted-foreground sm:px-4">
+              *Harga jual non-admin (Gun/Attachment × 1.1)
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {!loading && !items.length ? (
         <EmptyState title="Katalog kosong" message="Tambah item pertama." />

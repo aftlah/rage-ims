@@ -5,7 +5,6 @@ import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import {
   EmptyState,
   ErrorState,
-  InlineMessage,
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +34,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import { fmtLocalDateTime } from '@/lib/dates'
 import {
   calcDrugsSplits,
@@ -57,6 +57,7 @@ import { shareDrugsTotalsToDiscord } from '@/lib/discordShares'
 
 export function DrugsPage() {
   const { member, isAdmin } = useAuth()
+  const toast = useToast()
   const [members, setMembers] = useState<MemberLite[]>([])
   const [currentBatch, setCurrentBatch] = useState<number | null>(null)
   const [batchOptions, setBatchOptions] = useState<DrugsBatchOption[]>([])
@@ -67,7 +68,6 @@ export function DrugsPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<DrugsSaleRow | null>(null)
 
   const [adminMemberId, setAdminMemberId] = useState<number | ''>('')
@@ -119,8 +119,6 @@ export function DrugsPage() {
   const submit = async () => {
     if (!member) return
     setBusy(true)
-    setError(null)
-    setMessage(null)
 
     const targetId = isAdmin ? Number(adminMemberId) : Number(member.id)
     const targetNama = isAdmin
@@ -139,10 +137,10 @@ export function DrugsPage() {
     })
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage(editId ? 'Data drugs diupdate' : 'Data drugs tersimpan')
+    toast.success(editId ? 'Data drugs diupdate' : 'Data drugs tersimpan')
     resetForm()
     await refresh()
   }
@@ -161,7 +159,7 @@ export function DrugsPage() {
     const res = await toggleDrugsPaid([row.id], !row.is_paid)
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
     await refresh()
@@ -174,10 +172,10 @@ export function DrugsPage() {
     setBusy(false)
     setDeleteTarget(null)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Data drugs diarsipkan')
+    toast.success('Data drugs diarsipkan')
     await refresh()
   }
 
@@ -201,15 +199,13 @@ export function DrugsPage() {
                       : Number(batchFilter) || currentBatch
                   if (!batch) return
                   setBusy(true)
-                  setMessage(null)
-                  setError(null)
                   const res = await shareDrugsTotalsToDiscord(batch)
                   setBusy(false)
                   if (!res.ok) {
-                    setError(res.error)
+                    toast.error(res.error)
                     return
                   }
-                  setMessage('Total batch dikirim ke Discord')
+                  toast.success('Total batch dikirim ke Discord')
                 })()
               }}
             >
@@ -333,11 +329,6 @@ export function DrugsPage() {
               ) : null}
             </div>
           </div>
-
-          {error ? <InlineMessage tone="error">{error}</InlineMessage> : null}
-          {message ? (
-            <InlineMessage tone="success">{message}</InlineMessage>
-          ) : null}
         </CardContent>
       </Card>
 

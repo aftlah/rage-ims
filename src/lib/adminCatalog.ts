@@ -3,7 +3,7 @@ import { isMissingColumnError } from './orderUtils'
 import { supabase } from './supabase'
 
 export type CatalogAdminItem = {
-  id: number
+  id: string
   name: string
   kategori: CatalogCategory | string
   price: number
@@ -31,7 +31,7 @@ function mapRow(row: Record<string, unknown>): CatalogAdminItem {
     metadata = { note: note == null ? undefined : String(note) }
   }
   return {
-    id: Number(row.id),
+    id: String(row.id || ''),
     name: String(row.name || ''),
     kategori: String(row.kategori || ''),
     price: Number(row.price) || 0,
@@ -61,7 +61,7 @@ export async function fetchAdminCatalog(): Promise<{
 
 export async function upsertCatalogItem(
   input: CatalogUpsertInput,
-  id?: number,
+  id?: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const payload: Record<string, unknown> = {
     kategori: input.kategori,
@@ -79,8 +79,11 @@ export async function upsertCatalogItem(
     return { ok: false, error: 'Limit Order wajib diisi dan minimal 1' }
   }
 
-  let res = id
-    ? await supabase.from('catalog_items').update(payload).eq('id', id)
+  const itemId = id?.trim()
+  const isUpdate = !!itemId
+
+  let res = isUpdate
+    ? await supabase.from('catalog_items').update(payload).eq('id', itemId)
     : await supabase.from('catalog_items').insert([payload])
 
   if (
@@ -88,8 +91,8 @@ export async function upsertCatalogItem(
     isMissingColumnError(res.error, 'max_limit')
   ) {
     const { max_limit: _m, ...rest } = payload
-    res = id
-      ? await supabase.from('catalog_items').update(rest).eq('id', id)
+    res = isUpdate
+      ? await supabase.from('catalog_items').update(rest).eq('id', itemId)
       : await supabase.from('catalog_items').insert([rest])
   }
 
@@ -98,13 +101,16 @@ export async function upsertCatalogItem(
 }
 
 export async function toggleCatalogActive(
-  id: number,
+  id: string,
   isActive: boolean,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
+  const itemId = id.trim()
+  if (!itemId) return { ok: false, error: 'ID item tidak valid' }
+
   const { error } = await supabase
     .from('catalog_items')
     .update({ is_active: isActive })
-    .eq('id', id)
+    .eq('id', itemId)
   if (error) return { ok: false, error: error.message }
   return { ok: true }
 }

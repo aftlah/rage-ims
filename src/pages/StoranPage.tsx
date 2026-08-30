@@ -4,7 +4,7 @@ import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import { PageHeader } from '@/components/layout/PageHeader'
 import {
   EmptyState,
-  InlineMessage,
+  ErrorState,
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import { fmtLocalDateTime } from '@/lib/dates'
 import { fmtIdMoney } from '@/lib/format'
 import { fetchMembersLite, type MemberLite } from '@/lib/membersLite'
@@ -97,6 +98,7 @@ export function StoranPage() {
 
 function StoranMingguanPanel() {
   const { member, isAdmin } = useAuth()
+  const toast = useToast()
   const current = useMemo(() => getStoranCalendarWeekPeriod(), [])
   const [periodeValue, setPeriodeValue] = useState<number | 'current'>(
     'current',
@@ -109,7 +111,6 @@ function StoranMingguanPanel() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<StoranRekapRow | null>(null)
 
   const [status, setStatus] = useState<StoranStatus>('SUDAH')
@@ -142,8 +143,6 @@ function StoranMingguanPanel() {
   const submit = async () => {
     if (!member) return
     setBusy(true)
-    setMessage(null)
-    setError(null)
 
     const targetId = isAdmin
       ? Number(adminMemberId)
@@ -161,10 +160,10 @@ function StoranMingguanPanel() {
     })
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Storan tersimpan')
+    toast.success('Storan tersimpan')
     setPenerima('')
     await refresh()
   }
@@ -177,10 +176,10 @@ function StoranMingguanPanel() {
     setBusy(false)
     setDeleteTarget(null)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Storan dihapus')
+    toast.success('Storan dihapus')
     await refresh()
   }
 
@@ -232,15 +231,13 @@ function StoranMingguanPanel() {
                 onClick={() => {
                   void (async () => {
                     setBusy(true)
-                    setMessage(null)
-                    setError(null)
                     const res = await shareStoranRekapToDiscord(resolvedPeriode)
                     setBusy(false)
                     if (!res.ok) {
-                      setError(res.error)
+                      toast.error(res.error)
                       return
                     }
-                    setMessage('Rekap storan dikirim ke Discord')
+                    toast.success('Rekap storan dikirim ke Discord')
                   })()
                 }}
               >
@@ -340,13 +337,10 @@ function StoranMingguanPanel() {
               </Button>
             </div>
           </div>
-
-          {error ? <InlineMessage tone="error">{error}</InlineMessage> : null}
-          {message ? (
-            <InlineMessage tone="success">{message}</InlineMessage>
-          ) : null}
         </CardContent>
       </Card>
+
+      {error ? <ErrorState message={error} /> : null}
 
       <Card className="border-border/60 bg-card/80">
         <CardHeader>
@@ -433,6 +427,7 @@ function StoranMingguanPanel() {
 
 function NitipCuciPanel() {
   const { member, isAdmin } = useAuth()
+  const toast = useToast()
   const [members, setMembers] = useState<MemberLite[]>([])
   const [periodeOptions, setPeriodeOptions] = useState<NitipPeriodeOption[]>(
     [],
@@ -443,7 +438,6 @@ function NitipCuciPanel() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<NitipCuciRow | null>(null)
 
   const [adminMemberId, setAdminMemberId] = useState<number | ''>('')
@@ -513,8 +507,6 @@ function NitipCuciPanel() {
   const submit = async () => {
     if (!member) return
     setBusy(true)
-    setError(null)
-    setMessage(null)
     const targetId = isAdmin ? Number(adminMemberId) : Number(member.id)
     const targetNama = isAdmin
       ? members.find((m) => m.id === targetId)?.nama || ''
@@ -529,10 +521,10 @@ function NitipCuciPanel() {
     })
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Nitip cuci tersimpan')
+    toast.success('Nitip cuci tersimpan')
     setUangMerah('')
     setKeterangan('Nitip cuci')
     setBuktiFile(null)
@@ -545,7 +537,7 @@ function NitipCuciPanel() {
     const res = await toggleNitipPaid(row.id, !row.is_paid, isAdmin)
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
     await refresh()
@@ -559,10 +551,10 @@ function NitipCuciPanel() {
     setBusy(false)
     setDeleteTarget(null)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Nitip cuci dihapus')
+    toast.success('Nitip cuci dihapus')
     await refresh()
   }
 
@@ -716,12 +708,10 @@ function NitipCuciPanel() {
             </div>
           </div>
 
-          {error ? <InlineMessage tone="error">{error}</InlineMessage> : null}
-          {message ? (
-            <InlineMessage tone="success">{message}</InlineMessage>
-          ) : null}
         </CardContent>
       </Card>
+
+      {error ? <ErrorState message={error} /> : null}
 
       <Card className="border-border/60 bg-card/80">
         <CardHeader>

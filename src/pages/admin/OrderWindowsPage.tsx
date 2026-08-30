@@ -15,7 +15,6 @@ import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import {
   EmptyState,
   ErrorState,
-  InlineMessage,
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { Badge } from '@/components/ui/badge'
@@ -44,6 +43,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/contexts/ToastContext'
 import { cn } from '@/lib/utils'
 import { formatWindowDateTime } from '@/lib/format'
 import {
@@ -114,6 +114,7 @@ function statusTone(status: WindowLiveStatus) {
 }
 
 export function OrderWindowsPage() {
+  const toast = useToast()
   const formRef = useRef<HTMLDivElement>(null)
   const [kind, setKind] = useState<OrderWindowKind>('order')
   const [rows, setRows] = useState<OrderWindow[]>([])
@@ -124,7 +125,6 @@ export function OrderWindowsPage() {
   const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
 
   const now = new Date()
   const [month, setMonth] = useState(now.getMonth() + 1)
@@ -193,8 +193,6 @@ export function OrderWindowsPage() {
     if (kind === tabKind) return
     setKind(tabKind)
     resetForm()
-    setMessage(null)
-    setError(null)
   }
 
   const applyDuration = (hours: number) => {
@@ -214,8 +212,6 @@ export function OrderWindowsPage() {
     setStartLocal(toLocalInputValue(new Date(row.start_time)))
     setEndLocal(toLocalInputValue(new Date(row.end_time)))
     setOpenImmediately(row.is_active)
-    setMessage(null)
-    setError(null)
     requestAnimationFrame(() => {
       formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     })
@@ -223,8 +219,6 @@ export function OrderWindowsPage() {
 
   const handleSave = async () => {
     setBusy(true)
-    setError(null)
-    setMessage(null)
     const res = await upsertOrderWindow({
       month,
       week,
@@ -236,10 +230,10 @@ export function OrderWindowsPage() {
     })
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage(
+    toast.success(
       editId
         ? `Jadwal ${periodPreview} berhasil diubah`
         : openImmediately
@@ -252,44 +246,39 @@ export function OrderWindowsPage() {
 
   const handleClose = async (row: OrderWindow) => {
     setBusy(true)
-    setError(null)
-    setMessage(null)
     const res = await closeOrderWindow(row.id)
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage(`Periode ${formatOrderankeLabel(row.orderanke)} ditutup`)
+    toast.success(`Periode ${formatOrderankeLabel(row.orderanke)} ditutup`)
     if (editId === row.id) resetForm()
     await refresh()
   }
 
   const handleReactivate = async (row: OrderWindow) => {
     setBusy(true)
-    setError(null)
-    setMessage(null)
     const res = await setOrderWindowActive(row.id, true)
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage(`Periode ${formatOrderankeLabel(row.orderanke)} diaktifkan`)
+    toast.success(`Periode ${formatOrderankeLabel(row.orderanke)} diaktifkan`)
     await refresh()
   }
 
   const confirmDelete = async () => {
     if (!deleteTarget) return
     setBusy(true)
-    setError(null)
     const res = await deleteOrderWindow(deleteTarget.id)
     setBusy(false)
     if (!res.ok) {
-      setError(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Jadwal dihapus')
+    toast.success('Jadwal dihapus')
     if (editId === deleteTarget.id) resetForm()
     setDeleteTarget(null)
     await refresh()
@@ -380,8 +369,7 @@ export function OrderWindowsPage() {
         })}
       </div>
 
-      {error ? <InlineMessage tone="error">{error}</InlineMessage> : null}
-      {message ? <InlineMessage tone="success">{message}</InlineMessage> : null}
+      {error && !rows.length ? <ErrorState message={error} /> : null}
 
       {/* 1. Status sekarang */}
       <Card
@@ -457,15 +445,13 @@ export function OrderWindowsPage() {
                   onClick={() => {
                     void (async () => {
                       setBusy(true)
-                      setMessage(null)
-                      setError(null)
                       const res = await announceOrderWindowOpen(openNow.id)
                       setBusy(false)
                       if (!res.ok) {
-                        setError(res.error)
+                        toast.error(res.error)
                         return
                       }
-                      setMessage('Announcement dikirim ke Discord')
+                      toast.success('Announcement dikirim ke Discord')
                     })()
                   }}
                 >

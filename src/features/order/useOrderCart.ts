@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react'
+import { useToast } from '../../contexts/ToastContext'
 import type { CatalogByCategory, CatalogItem } from '../../lib/catalog'
 import {
   addItemToCart,
@@ -22,11 +23,8 @@ type UseOrderCartArgs = {
 }
 
 export function useOrderCart(args: UseOrderCartArgs) {
+  const toast = useToast()
   const [cart, setCart] = useState<CartLine[]>([])
-  const [message, setMessage] = useState<{
-    type: 'success' | 'error' | 'info'
-    text: string
-  } | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   const totals = useMemo(() => {
@@ -49,14 +47,14 @@ export function useOrderCart(args: UseOrderCartArgs) {
         isOpen: args.isOpen,
       })
       if ('error' in result) {
-        setMessage({ type: 'error', text: result.error })
+        toast.error(result.error)
         return false
       }
       setCart(result.cart)
-      setMessage({ type: 'success', text: `${item.name} ditambahkan` })
+      toast.success(`${item.name} ditambahkan`)
       return true
     },
-    [args.catalog, args.itemTotals, args.isOpen, args.nama, args.role, cart],
+    [args.catalog, args.itemTotals, args.isOpen, args.nama, args.role, cart, toast],
   )
 
   const updateQty = useCallback((index: number, qty: number) => {
@@ -74,24 +72,17 @@ export function useOrderCart(args: UseOrderCartArgs) {
   const submit = useCallback(async () => {
     if (submitting) return
     setSubmitting(true)
-    setMessage({ type: 'info', text: 'Menyimpan...' })
     try {
       if (args.maintenanceBlocked) {
-        setMessage({
-          type: 'error',
-          text: 'Sedang maintenance: Sebentar yaa kawan',
-        })
+        toast.error('Sedang maintenance: Sebentar yaa kawan')
         return
       }
       if (!args.memberId || !args.nama) {
-        setMessage({ type: 'error', text: 'Akun belum terhubung ke member' })
+        toast.error('Akun belum terhubung ke member')
         return
       }
       if (!args.orderanke) {
-        setMessage({
-          type: 'error',
-          text: 'Periode order aktif tidak ditemukan',
-        })
+        toast.error('Periode order aktif tidak ditemukan')
         return
       }
 
@@ -107,32 +98,28 @@ export function useOrderCart(args: UseOrderCartArgs) {
       })
 
       if (!result.ok) {
-        setMessage({ type: 'error', text: result.error })
+        toast.error(result.error)
         return
       }
 
       setCart([])
       await args.onSubmitted()
-      setMessage({ type: 'success', text: 'Berhasil disimpan' })
+      toast.success('Berhasil disimpan')
     } catch {
-      setMessage({ type: 'error', text: 'Gagal menyimpan (network error)' })
+      toast.error('Gagal menyimpan (network error)')
     } finally {
       setSubmitting(false)
     }
-  }, [args, cart, submitting])
-
-  const clearMessage = useCallback(() => setMessage(null), [])
+  }, [args, cart, submitting, toast])
 
   return {
     cart,
     totals,
-    message,
     submitting,
     addItem,
     updateQty,
     removeLine,
     clearCart,
     submit,
-    clearMessage,
   }
 }

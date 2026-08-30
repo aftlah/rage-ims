@@ -4,7 +4,6 @@ import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import {
   EmptyState,
   ErrorState,
-  InlineMessage,
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { Badge } from '@/components/ui/badge'
@@ -34,6 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import {
   fetchAccountAuditLogs,
   fetchAdminMembers,
@@ -46,6 +46,7 @@ import {
 
 export function UsersPage() {
   const { user, isAdmin } = useAuth()
+  const toast = useToast()
   const [members, setMembers] = useState<AdminMember[]>([])
   const [audit, setAudit] = useState<AuditRow[]>([])
   const [search, setSearch] = useState('')
@@ -53,7 +54,6 @@ export function UsersPage() {
   const [roleDraft, setRoleDraft] = useState('Hoodlum')
   const [usernameDraft, setUsernameDraft] = useState('')
   const [loading, setLoading] = useState(true)
-  const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -92,7 +92,6 @@ export function UsersPage() {
   async function handleSaveRole() {
     if (!selected) return
     setBusy(true)
-    setMessage(null)
     const res = await updateMemberRole({
       memberId: selected.id,
       role: roleDraft,
@@ -101,10 +100,10 @@ export function UsersPage() {
     })
     setBusy(false)
     if (!res.ok) {
-      setMessage(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage('Role berhasil diupdate')
+    toast.success('Role berhasil diupdate')
     await refresh()
     setSelected((prev) =>
       prev && prev.id === selected.id ? { ...prev, role: roleDraft } : prev,
@@ -114,7 +113,6 @@ export function UsersPage() {
   async function handlePatchUsername() {
     if (!selected) return
     setBusy(true)
-    setMessage(null)
     const res = await patchMemberProfileViaRpc({
       memberId: selected.id,
       username: usernameDraft,
@@ -123,10 +121,10 @@ export function UsersPage() {
     })
     setBusy(false)
     if (!res.ok) {
-      setMessage(res.error)
+      toast.error(res.error)
       return
     }
-    setMessage(`Username berhasil diubah — login sekarang: ${res.email}`)
+    toast.success(`Username berhasil diubah — login sekarang: ${res.email}`)
     await refresh()
     setSelected((prev) =>
       prev && prev.id === selected.id
@@ -149,7 +147,6 @@ export function UsersPage() {
         </Button>
       </PageHeader>
 
-      {message ? <InlineMessage tone="success">{message}</InlineMessage> : null}
       {error ? <ErrorState message={error} /> : null}
 
       <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-[0.9fr_1.1fr]">

@@ -38,7 +38,6 @@ import {
   ErrorState,
   LoadingState,
 } from '@/components/ui/StatusBlock'
-import { ToastNotice } from '@/components/ui/toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettings } from '@/contexts/SettingsContext'
 import { useOrderCart } from '@/features/order/useOrderCart'
@@ -201,14 +200,12 @@ export function OrderPage() {
   const {
     cart,
     totals,
-    message,
     submitting,
     addItem,
     updateQty,
     removeLine,
     clearCart,
     submit,
-    clearMessage,
   } = useOrderCart({
     catalog,
     itemTotals,
@@ -385,17 +382,6 @@ export function OrderPage() {
         </CardContent>
       </Card>
 
-      <ToastNotice
-        message={message?.text ?? null}
-        tone={
-          message?.type === 'error'
-            ? 'error'
-            : message?.type === 'info'
-              ? 'info'
-              : 'success'
-        }
-        onDismiss={clearMessage}
-      />
 
       {loading ? <LoadingState message="Memuat katalog…" /> : null}
       {error ? <ErrorState message={error} /> : null}

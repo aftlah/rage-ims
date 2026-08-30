@@ -11,8 +11,8 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { InlineMessage } from '@/components/ui/StatusBlock'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/contexts/ToastContext'
 import {
   changeCurrentUserPassword,
   getUsernameFromEmail,
@@ -21,27 +21,24 @@ import {
 
 export function ProfilePage() {
   const { member, user } = useAuth()
+  const toast = useToast()
 
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
-  const [formError, setFormError] = useState<string | null>(null)
 
   const username = getUsernameFromEmail(user?.email)
 
   const handleSavePassword = async (e: FormEvent) => {
     e.preventDefault()
-    setMessage(null)
-    setFormError(null)
 
     const check = validatePasswordStrength(newPassword)
     if (!check.ok) {
-      setFormError(check.message)
+      toast.error(check.message)
       return
     }
     if (newPassword !== confirmPassword) {
-      setFormError('Konfirmasi password tidak sama')
+      toast.error('Konfirmasi password tidak sama')
       return
     }
 
@@ -50,13 +47,13 @@ export function ProfilePage() {
     setBusy(false)
 
     if (!res.ok) {
-      setFormError(`Gagal mengubah password: ${res.error}`)
+      toast.error(`Gagal mengubah password: ${res.error}`)
       return
     }
 
     setNewPassword('')
     setConfirmPassword('')
-    setMessage('Password berhasil diubah')
+    toast.success('Password berhasil diubah')
   }
 
   return (
@@ -65,9 +62,6 @@ export function ProfilePage() {
         title="Profile"
         subtitle="Kelola informasi akun dan ubah password login"
       />
-
-      {message ? <InlineMessage tone="success">{message}</InlineMessage> : null}
-      {formError ? <InlineMessage tone="error">{formError}</InlineMessage> : null}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <Card className="border-border/60 bg-card/80">
