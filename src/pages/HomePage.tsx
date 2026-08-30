@@ -10,6 +10,7 @@ import {
   Tag,
   User,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -52,16 +53,17 @@ import {
   type OrderWindow,
 } from '@/lib/orderWindow'
 
-const shortcuts = [
-  { to: '/order', label: 'Order', icon: ShoppingCart, desc: 'Buat order baru' },
-  { to: '/prices', label: 'Harga', icon: Tag, desc: 'Lihat daftar harga' },
-  { to: '/absen', label: 'Absen', icon: MapPin, desc: 'Masuk / keluar kota' },
-  { to: '/rekap', label: 'Rekap', icon: ClipboardList, desc: 'Rekap order kamu' },
-  { to: '/storan-saya', label: 'Storan Saya', icon: Package, desc: 'Status storan & nitip' },
-  { to: '/profile', label: 'Profile', icon: User, desc: 'Akun & password' },
+const shortcutKeys = [
+  { to: '/order', labelKey: 'nav.order', descKey: 'home.shortcutDesc.order', icon: ShoppingCart },
+  { to: '/prices', labelKey: 'nav.prices', descKey: 'home.shortcutDesc.prices', icon: Tag },
+  { to: '/absen', labelKey: 'nav.absen', descKey: 'home.shortcutDesc.absen', icon: MapPin },
+  { to: '/rekap', labelKey: 'nav.rekap', descKey: 'home.shortcutDesc.rekap', icon: ClipboardList },
+  { to: '/storan-saya', labelKey: 'nav.myStoran', descKey: 'home.shortcutDesc.storan', icon: Package },
+  { to: '/profile', labelKey: 'nav.profile', descKey: 'home.shortcutDesc.profile', icon: User },
 ] as const
 
 export function HomePage() {
+  const { t, i18n } = useTranslation()
   const { member, isAdmin } = useAuth()
   const { siteNotice } = useSettings()
 
@@ -72,6 +74,8 @@ export function HomePage() {
   const [storanView, setStoranView] = useState<MemberStoranView | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const dateLocale = i18n.language.startsWith('en') ? 'en-US' : 'id-ID'
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -102,22 +106,17 @@ export function HomePage() {
   const winInfo = describeOrderWindow(orderWin)
   const greeting = useMemo(() => {
     const hour = new Date().getHours()
-    if (hour < 12) return 'Selamat pagi'
-    if (hour < 18) return 'Selamat siang'
-    return 'Selamat malam'
-  }, [])
-
-  const visibleShortcuts = shortcuts
+    if (hour < 12) return t('home.greetingMorning')
+    if (hour < 18) return t('home.greetingAfternoon')
+    return t('home.greetingEvening')
+  }, [t])
 
   return (
     <PageStack>
-      <PageHeader
-        title="Beranda"
-        subtitle="Ringkasan aktivitas, shortcut menu, dan status order kamu"
-      >
+      <PageHeader title={t('home.title')} subtitle={t('home.subtitle')}>
         <Button variant="outline" size="sm" onClick={() => void load()}>
           <RefreshCw className="size-4" />
-          <span className="hidden sm:inline">Refresh</span>
+          <span className="hidden sm:inline">{t('common.refresh')}</span>
         </Button>
       </PageHeader>
 
@@ -125,11 +124,13 @@ export function HomePage() {
         <CardContent className="">
           <p className="text-sm text-muted-foreground">{greeting},</p>
           <h3 className="mt-1 text-2xl font-bold tracking-tight">
-            {member?.nama || 'Member'}
+            {member?.nama || t('common.member')}
           </h3>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <Badge variant="outline">{member?.role || '—'}</Badge>
-            {isAdmin ? <Badge variant="secondary">Admin</Badge> : null}
+            {isAdmin ? (
+              <Badge variant="secondary">{t('common.admin')}</Badge>
+            ) : null}
           </div>
         </CardContent>
       </Card>
@@ -137,7 +138,9 @@ export function HomePage() {
       {siteNotice.trim() ? (
         <Card className="border-primary/25 bg-primary/10">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base text-primary">Pengumuman</CardTitle>
+            <CardTitle className="text-base text-primary">
+              {t('common.announcement')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm leading-relaxed text-primary/90">
@@ -150,12 +153,12 @@ export function HomePage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <Card className="border-border/60 bg-card/80 sm:col-span-2 xl:col-span-1">
           <CardHeader>
-            <CardTitle className="text-base">Status Order</CardTitle>
-            <CardDescription>Periode order aktif saat ini</CardDescription>
+            <CardTitle className="text-base">{t('home.orderStatus')}</CardTitle>
+            <CardDescription>{t('home.orderStatusDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {loading ? (
-              <LoadingState message="Memuat status…" />
+              <LoadingState message={t('common.loadingStatus')} />
             ) : (
               <>
                 <Badge variant={winInfo.isOpen ? 'default' : 'destructive'}>
@@ -171,7 +174,7 @@ export function HomePage() {
                 </p>
                 <Button asChild size="sm" variant="outline">
                   <Link to="/order">
-                    Ke halaman Order
+                    {t('home.goToOrder')}
                     <ArrowRight className="size-4" />
                   </Link>
                 </Button>
@@ -182,14 +185,14 @@ export function HomePage() {
 
         <Card className="border-border/60 bg-card/80">
           <CardHeader>
-            <CardTitle className="text-base">Ringkasan Order</CardTitle>
-            <CardDescription>Semua periode — data milik kamu</CardDescription>
+            <CardTitle className="text-base">{t('home.orderSummary')}</CardTitle>
+            <CardDescription>{t('home.orderSummaryDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {loading ? (
-              <LoadingState />
+              <LoadingState message={t('common.loading')} />
             ) : !member?.nama ? (
-              <EmptyState title="Akun belum terhubung ke member" />
+              <EmptyState title={t('home.notLinkedMember')} />
             ) : orderSummary?.error ? (
               <ErrorState message={orderSummary.error} />
             ) : (
@@ -197,7 +200,7 @@ export function HomePage() {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-xl border border-border/50 bg-muted/15 p-3 text-center">
                     <p className="text-[10px] tracking-wide text-muted-foreground uppercase">
-                      Order
+                      {t('nav.order')}
                     </p>
                     <p className="mt-1 text-xl font-bold tabular-nums">
                       {orderSummary?.stats.orderCount ?? 0}
@@ -219,7 +222,7 @@ export function HomePage() {
                 </p>
                 <Button asChild size="sm" variant="ghost" className="px-0">
                   <Link to="/rekap">
-                    Lihat rekap lengkap
+                    {t('home.viewFullRekap')}
                     <ArrowRight className="size-4" />
                   </Link>
                 </Button>
@@ -230,14 +233,14 @@ export function HomePage() {
 
         <Card className="border-border/60 bg-card/80">
           <CardHeader>
-            <CardTitle className="text-base">Storan Minggu Ini</CardTitle>
-            <CardDescription>Read-only — minggu kalender ISO</CardDescription>
+            <CardTitle className="text-base">{t('home.storanThisWeek')}</CardTitle>
+            <CardDescription>{t('home.storanThisWeekDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {loading ? (
-              <LoadingState />
+              <LoadingState message={t('common.loading')} />
             ) : !member?.id ? (
-              <EmptyState title="Akun belum terhubung" />
+              <EmptyState title={t('home.notLinked')} />
             ) : (
               <>
                 <Badge
@@ -247,17 +250,21 @@ export function HomePage() {
                       : 'destructive'
                   }
                 >
-                  {storanView?.week.statusRaw === 'SUDAH' ? 'Sudah' : 'Belum'}
+                  {storanView?.week.statusRaw === 'SUDAH'
+                    ? t('common.done')
+                    : t('common.notYet')}
                 </Badge>
                 <p className="text-xs leading-relaxed text-muted-foreground">
                   {storanView?.week.statusLabel}
                 </p>
                 <p className="text-[11px] text-muted-foreground">
-                  Periode {storanView?.week.period.label}
+                  {t('home.periodLabel', {
+                    label: storanView?.week.period.label ?? '—',
+                  })}
                 </p>
                 <Button asChild size="sm" variant="ghost" className="px-0">
                   <Link to="/storan-saya">
-                    Detail storan saya
+                    {t('home.myStoranDetail')}
                     <ArrowRight className="size-4" />
                   </Link>
                 </Button>
@@ -269,12 +276,12 @@ export function HomePage() {
 
       <Card className="border-border/60 bg-card/80">
         <CardHeader>
-          <CardTitle className="text-base">Shortcut</CardTitle>
-          <CardDescription>Akses cepat ke menu utama</CardDescription>
+          <CardTitle className="text-base">{t('home.shortcuts')}</CardTitle>
+          <CardDescription>{t('home.shortcutsDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {visibleShortcuts.map((item) => {
+            {shortcutKeys.map((item) => {
               const Icon = item.icon
               return (
                 <Link
@@ -284,9 +291,9 @@ export function HomePage() {
                 >
                   <Icon className="size-5 text-primary" />
                   <div>
-                    <p className="text-sm font-semibold">{item.label}</p>
+                    <p className="text-sm font-semibold">{t(item.labelKey)}</p>
                     <p className="mt-0.5 text-[10px] leading-snug text-muted-foreground">
-                      {item.desc}
+                      {t(item.descKey)}
                     </p>
                   </div>
                 </Link>
@@ -296,37 +303,50 @@ export function HomePage() {
         </CardContent>
       </Card>
 
-      {error ? <ErrorState message={error} /> : null}
+      {error ? (
+        <ErrorState title={t('common.loadFailed')} message={error} />
+      ) : null}
 
       <Card className="border-border/60 bg-card/80">
         <CardHeader>
-          <CardTitle className="text-base">Riwayat Order Terakhir</CardTitle>
+          <CardTitle className="text-base">{t('home.orderHistory')}</CardTitle>
           <CardDescription>
             {member?.nama
-              ? `8 baris terbaru milik ${member.nama}`
-              : 'Login sebagai member terhubung'}
+              ? t('home.orderHistoryDescNamed', { name: member.nama })
+              : t('home.orderHistoryDescGuest')}
           </CardDescription>
         </CardHeader>
         <CardContent className="px-0 pb-0">
           {loading ? (
             <div className="px-6 pb-6">
-              <LoadingState message="Memuat riwayat…" />
+              <LoadingState message={t('common.loadingHistory')} />
             </div>
           ) : !orderSummary?.recent.length ? (
             <div className="px-6 pb-6">
-              <EmptyState title="Belum ada order" message="Order kamu akan muncul di sini" />
+              <EmptyState
+                title={t('home.noOrders')}
+                message={t('home.noOrdersMessage')}
+              />
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Waktu</TableHead>
-                  <TableHead>Batch</TableHead>
-                  <TableHead>Item</TableHead>
-                  <TableHead className="text-center">Qty</TableHead>
-                  <TableHead className="text-right">Subtotal</TableHead>
-                  <TableHead className="text-center">Bayar</TableHead>
-                  <TableHead className="text-center">Delivered</TableHead>
+                  <TableHead>{t('home.table.time')}</TableHead>
+                  <TableHead>{t('home.table.batch')}</TableHead>
+                  <TableHead>{t('home.table.item')}</TableHead>
+                  <TableHead className="text-center">
+                    {t('home.table.qty')}
+                  </TableHead>
+                  <TableHead className="text-right">
+                    {t('home.table.subtotal')}
+                  </TableHead>
+                  <TableHead className="text-center">
+                    {t('home.table.paid')}
+                  </TableHead>
+                  <TableHead className="text-center">
+                    {t('home.table.delivered')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -334,7 +354,7 @@ export function HomePage() {
                   <TableRow key={row.id}>
                     <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
                       {row.waktu
-                        ? new Date(row.waktu).toLocaleString('id-ID', {
+                        ? new Date(row.waktu).toLocaleString(dateLocale, {
                             dateStyle: 'short',
                             timeStyle: 'short',
                           })
@@ -352,12 +372,12 @@ export function HomePage() {
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant={row.paid ? 'default' : 'outline'}>
-                        {row.paid ? 'Ya' : 'Belum'}
+                        {row.paid ? t('common.yes') : t('common.no')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant={row.delivered ? 'default' : 'outline'}>
-                        {row.delivered ? 'Ya' : 'Belum'}
+                        {row.delivered ? t('common.yes') : t('common.no')}
                       </Badge>
                     </TableCell>
                   </TableRow>

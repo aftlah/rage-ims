@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Menu, LogOut } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -8,6 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettings } from '@/contexts/SettingsContext'
 import { BackgroundMusic } from '@/components/BackgroundMusic'
@@ -15,79 +17,78 @@ import { canAccessWeeklyProfit } from '@/lib/weeklyProfitAccess'
 
 type NavItem = {
   to: string
-  label: string
+  labelKey: string
   icon: string
   adminOnly?: boolean
   weeklyProfitOnly?: boolean
 }
 
 type NavGroup = {
-  title: string
+  titleKey: string
   items: NavItem[]
   adminOnly?: boolean
 }
 
 const navGroups: NavGroup[] = [
   {
-    title: 'Operasional',
+    titleKey: 'nav.groups.operational',
     items: [
-      { to: '/home', label: 'Beranda', icon: '🏠' },
-      { to: '/order', label: 'Order', icon: '📋' },
-      { to: '/prices', label: 'Harga', icon: '💲' },
-      // { to: '/absen', label: 'Absen', icon: '📍' },
+      { to: '/home', labelKey: 'nav.home', icon: '🏠' },
+      { to: '/order', labelKey: 'nav.order', icon: '📋' },
+      { to: '/prices', labelKey: 'nav.prices', icon: '💲' },
     ],
   },
   {
-    title: 'Keuangan',
+    titleKey: 'nav.groups.finance',
     items: [
-      { to: '/storan-saya', label: 'Storan Saya', icon: '📥' },
-      { to: '/storan', label: 'Storan', icon: '📦', adminOnly: true },
-      { to: '/kas', label: 'Kas', icon: '💰', adminOnly: true },
-      { to: '/rekap', label: 'Rekap', icon: '📊' },
+      { to: '/storan-saya', labelKey: 'nav.myStoran', icon: '📥' },
+      { to: '/storan', labelKey: 'nav.storan', icon: '📦', adminOnly: true },
+      { to: '/kas', labelKey: 'nav.kas', icon: '💰', adminOnly: true },
+      { to: '/rekap', labelKey: 'nav.rekap', icon: '📊' },
       {
         to: '/profit-mingguan',
-        label: 'Profit Mingguan',
+        labelKey: 'nav.weeklyProfit',
         icon: '💹',
         weeklyProfitOnly: true,
       },
     ],
   },
   {
-    title: 'Inventory',
-    items: [{ to: '/drugs', label: 'Drugs', icon: '🧪', adminOnly: true }],
+    titleKey: 'nav.groups.inventory',
+    items: [{ to: '/drugs', labelKey: 'nav.drugs', icon: '🧪', adminOnly: true }],
   },
   {
-    title: 'Akun',
-    items: [{ to: '/profile', label: 'Profile', icon: '👤' }],
+    titleKey: 'nav.groups.account',
+    items: [{ to: '/profile', labelKey: 'nav.profile', icon: '👤' }],
   },
   {
-    title: 'Admin',
+    titleKey: 'nav.groups.admin',
     adminOnly: true,
     items: [
-      { to: '/admin/windows', label: 'Periode', icon: '🗓️' },
-      { to: '/admin/catalog', label: 'Catalog', icon: '🗂️' },
-      { to: '/admin/users', label: 'Users', icon: '👥' },
-      { to: '/admin/settings', label: 'Settings', icon: '⚙️' },
+      { to: '/admin/windows', labelKey: 'nav.windows', icon: '🗓️' },
+      { to: '/admin/catalog', labelKey: 'nav.catalog', icon: '🗂️' },
+      { to: '/admin/users', labelKey: 'nav.users', icon: '👥' },
+      { to: '/admin/settings', labelKey: 'nav.settings', icon: '⚙️' },
     ],
   },
 ]
 
-const pageTitles: Record<string, string> = {
-  '/home': 'Beranda',
-  '/order': 'Order',
-  '/prices': 'Harga',
-  '/absen': 'Absen',
-  '/storan-saya': 'Storan Saya',
-  '/storan': 'Storan',
-  '/kas': 'Kas',
-  '/rekap': 'Rekap',
-  '/profit-mingguan': 'Profit Mingguan',
-  '/drugs': 'Drugs',
-  '/profile': 'Profile',
-  '/admin/windows': 'Periode',
-  '/admin/catalog': 'Catalog',
-  '/admin/users': 'Users',
-  '/admin/settings': 'Settings',
+const pageTitleKeys: Record<string, string> = {
+  '/home': 'nav.home',
+  '/order': 'nav.order',
+  '/prices': 'nav.prices',
+  '/absen': 'nav.absen',
+  '/storan-saya': 'nav.myStoran',
+  '/storan': 'nav.storan',
+  '/kas': 'nav.kas',
+  '/rekap': 'nav.rekap',
+  '/profit-mingguan': 'nav.weeklyProfit',
+  '/drugs': 'nav.drugs',
+  '/profile': 'nav.profile',
+  '/admin/windows': 'nav.windows',
+  '/admin/catalog': 'nav.catalog',
+  '/admin/users': 'nav.users',
+  '/admin/settings': 'nav.settings',
 }
 
 function navClassName({ isActive }: { isActive: boolean }) {
@@ -118,20 +119,24 @@ function SidebarNav({
   visibleGroups: NavGroup[]
   onNavigate?: () => void
 }) {
+  const { t } = useTranslation()
+
   return (
     <>
       <div className="border-b border-border px-4 py-4">
         <p className="text-gradient-gold text-sm font-extrabold tracking-[0.12em]">
           R.A.G.E
         </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">Management System</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {t('app.subtitle')}
+        </p>
       </div>
 
       <nav className="flex flex-1 flex-col gap-5 overflow-y-auto p-3">
         {visibleGroups.map((group) => (
-          <div key={group.title}>
+          <div key={group.titleKey}>
             <p className="mb-2 px-2 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
-              {group.title}
+              {t(group.titleKey)}
             </p>
             <div className="flex flex-col gap-0.5">
               {group.items.map((item) => (
@@ -144,7 +149,7 @@ function SidebarNav({
                   <span className="text-sm opacity-70" aria-hidden>
                     {item.icon}
                   </span>
-                  {item.label}
+                  {t(item.labelKey)}
                 </NavLink>
               ))}
             </div>
@@ -156,6 +161,7 @@ function SidebarNav({
 }
 
 export function DashboardLayout() {
+  const { t } = useTranslation()
   const { member, isAdmin, signOut } = useAuth()
   const { siteNotice, maintenanceMode, weeklyProfitViewerIds } = useSettings()
   const location = useLocation()
@@ -178,13 +184,15 @@ export function DashboardLayout() {
         .filter((g) => g.items.length > 0),
     [isAdmin, canWeeklyProfit],
   )
-  const pageTitle =
-    pageTitles[location.pathname] ||
-    Object.entries(pageTitles).find(([path]) =>
+
+  const pageTitleKey =
+    pageTitleKeys[location.pathname] ||
+    Object.entries(pageTitleKeys).find(([path]) =>
       location.pathname.startsWith(path),
     )?.[1] ||
-    'Dashboard'
+    'nav.dashboard'
 
+  const pageTitle = t(pageTitleKey)
   const initials = useMemo(() => memberInitials(member?.nama), [member?.nama])
 
   useEffect(() => {
@@ -192,14 +200,15 @@ export function DashboardLayout() {
   }, [location.pathname])
 
   const sidebarFooter = (
-    <div className="border-t border-border p-3">
+    <div className="space-y-2 border-t border-border p-3">
+      <LanguageSwitcher className="w-full justify-center" compact />
       <Button
         variant="outline"
         className="w-full"
         onClick={() => void signOut()}
       >
         <LogOut className="size-4" />
-        Keluar
+        {t('layout.logout')}
       </Button>
     </div>
   )
@@ -215,7 +224,9 @@ export function DashboardLayout() {
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-[min(18rem,90vw)] p-0">
           <SheetHeader className="border-b border-border px-4 py-3">
-            <SheetTitle className="text-gradient-gold text-left">Menu</SheetTitle>
+            <SheetTitle className="text-gradient-gold text-left">
+              {t('layout.menu')}
+            </SheetTitle>
           </SheetHeader>
           <div className="flex h-[calc(100dvh-4rem)] flex-col">
             <SidebarNav
@@ -233,7 +244,7 @@ export function DashboardLayout() {
             variant="outline"
             size="icon"
             className="size-9 shrink-0 md:hidden"
-            aria-label="Buka menu"
+            aria-label={t('layout.openMenu')}
             onClick={() => setMobileOpen(true)}
           >
             <Menu className="size-5" />
@@ -245,11 +256,15 @@ export function DashboardLayout() {
             </h1>
           </div>
 
+          <LanguageSwitcher compact className="hidden shrink-0 sm:flex" />
+
           <NavLink
             to="/profile"
             className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-primary/15 text-xs font-bold text-primary transition-colors hover:bg-primary/25 md:hidden"
-            title="Buka profile"
-            aria-label={`Profile ${member?.nama || ''}`}
+            title={t('layout.openProfile')}
+            aria-label={t('layout.profileAria', {
+              name: member?.nama || '',
+            })}
           >
             {initials}
           </NavLink>
@@ -257,14 +272,14 @@ export function DashboardLayout() {
           <NavLink
             to="/profile"
             className="hidden min-w-0 items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 transition-colors hover:bg-muted/60 md:flex md:max-w-60"
-            title="Buka profile"
+            title={t('layout.openProfile')}
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
               {initials}
             </div>
             <div className="min-w-0 flex-1 truncate text-right">
               <p className="truncate text-xs font-semibold">
-                {member?.nama || 'Belum terhubung'}
+                {member?.nama || t('layout.notConnected')}
               </p>
               <p className="truncate text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
                 {member?.role || '—'}
@@ -281,8 +296,7 @@ export function DashboardLayout() {
 
         {maintenanceMode && isAdmin ? (
           <div className="mb-2 shrink-0 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200 sm:mb-3 sm:px-4 sm:text-sm">
-            Mode maintenance aktif — member diblok. Matikan di Admin →
-            Settings.
+            {t('layout.maintenanceBanner')}
           </div>
         ) : null}
 

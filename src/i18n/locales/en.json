@@ -1,0 +1,132 @@
+{
+  "app": {
+    "title": "R.A.G.E Management System",
+    "subtitle": "Management System"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "id": "Indonesia"
+  },
+  "login": {
+    "kicker": "Internal platform",
+    "headlineSub": "Management System",
+    "copy": "A centralized platform for operations, summaries, deposits, catalog, and member financial reporting.",
+    "features": {
+      "order": { "label": "Order", "desc": "Period management" },
+      "rekap": { "label": "Rekap", "desc": "Operations summary" },
+      "storan": { "label": "Storan", "desc": "Balance tracking" },
+      "profit": { "label": "Profit", "desc": "Financial reports" }
+    },
+    "stats": {
+      "modules": "Integrated modules",
+      "sync": "Data sync",
+      "access": "Member access"
+    },
+    "encryptedAccess": "Encrypted access",
+    "welcome": "Welcome",
+    "subtitle": "Sign in with your member username and password",
+    "username": "Username",
+    "password": "Password",
+    "usernamePlaceholder": "Enter username",
+    "passwordPlaceholder": "Enter password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "footer": "Registered members only · R.A.G.E"
+  },
+  "nav": {
+    "groups": {
+      "operational": "Operations",
+      "finance": "Finance",
+      "inventory": "Inventory",
+      "account": "Account",
+      "admin": "Admin"
+    },
+    "home": "Home",
+    "order": "Order",
+    "prices": "Prices",
+    "absen": "Attendance",
+    "myStoran": "My Deposits",
+    "storan": "Deposits",
+    "kas": "Cash",
+    "rekap": "Rekap",
+    "weeklyProfit": "Weekly Profit",
+    "drugs": "Drugs",
+    "profile": "Profile",
+    "windows": "Periods",
+    "catalog": "Catalog",
+    "users": "Users",
+    "settings": "Settings",
+    "dashboard": "Dashboard"
+  },
+  "layout": {
+    "menu": "Menu",
+    "logout": "Sign out",
+    "openMenu": "Open menu",
+    "openProfile": "Open profile",
+    "profileAria": "Profile {{name}}",
+    "notConnected": "Not connected",
+    "maintenanceBanner": "Maintenance mode active — members are blocked. Disable in Admin → Settings."
+  },
+  "common": {
+    "loading": "Loading…",
+    "loadingStatus": "Loading status…",
+    "loadingHistory": "Loading history…",
+    "refresh": "Refresh",
+    "yes": "Yes",
+    "no": "No",
+    "notYet": "Not yet",
+    "done": "Done",
+    "admin": "Admin",
+    "member": "Member",
+    "emptyData": "No data yet",
+    "loadFailed": "Failed to load",
+    "announcement": "Announcement",
+    "period": "Period"
+  },
+  "home": {
+    "title": "Home",
+    "subtitle": "Activity summary, shortcuts, and your order status",
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "orderStatus": "Order Status",
+    "orderStatusDesc": "Current active order period",
+    "goToOrder": "Go to Order page",
+    "orderSummary": "Order Summary",
+    "orderSummaryDesc": "All periods — your data only",
+    "viewFullRekap": "View full rekap",
+    "storanThisWeek": "Deposits This Week",
+    "storanThisWeekDesc": "Read-only — ISO calendar week",
+    "periodLabel": "Period {{label}}",
+    "myStoranDetail": "My deposit details",
+    "shortcuts": "Shortcuts",
+    "shortcutsDesc": "Quick access to main menus",
+    "orderHistory": "Recent Orders",
+    "orderHistoryDescNamed": "Latest 8 rows for {{name}}",
+    "orderHistoryDescGuest": "Sign in as a linked member",
+    "notLinkedMember": "Account not linked to a member",
+    "notLinked": "Account not linked",
+    "noOrders": "No orders yet",
+    "noOrdersMessage": "Your orders will appear here",
+    "table": {
+      "time": "Time",
+      "batch": "Batch",
+      "item": "Item",
+      "qty": "Qty",
+      "subtotal": "Subtotal",
+      "paid": "Paid",
+      "delivered": "Delivered"
+    },
+    "shortcutDesc": {
+      "order": "Create a new order",
+      "prices": "View price list",
+      "absen": "Check in / out of city",
+      "rekap": "Your order summary",
+      "storan": "Deposit & nitip status",
+      "profile": "Account & password"
+    }
+  }
+}

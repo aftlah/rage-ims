@@ -1,0 +1,132 @@
+{
+  "app": {
+    "title": "R.A.G.E Sistem Manajemen",
+    "subtitle": "Sistem Manajemen"
+  },
+  "language": {
+    "label": "Bahasa",
+    "en": "English",
+    "id": "Indonesia"
+  },
+  "login": {
+    "kicker": "Platform internal",
+    "headlineSub": "Sistem Manajemen",
+    "copy": "Platform terpusat untuk mengelola operasional, rekap, storan, katalog, dan laporan keuangan member.",
+    "features": {
+      "order": { "label": "Order", "desc": "Manajemen periode" },
+      "rekap": { "label": "Rekap", "desc": "Ringkasan operasional" },
+      "storan": { "label": "Storan", "desc": "Pencatatan saldo" },
+      "profit": { "label": "Profit", "desc": "Laporan keuangan" }
+    },
+    "stats": {
+      "modules": "Modul terintegrasi",
+      "sync": "Sinkronisasi data",
+      "access": "Akses member"
+    },
+    "encryptedAccess": "Akses terenkripsi",
+    "welcome": "Selamat datang",
+    "subtitle": "Masuk menggunakan username dan password member",
+    "username": "Username",
+    "password": "Password",
+    "usernamePlaceholder": "Masukkan username",
+    "passwordPlaceholder": "Masukkan password",
+    "showPassword": "Tampilkan password",
+    "hidePassword": "Sembunyikan password",
+    "signIn": "Masuk",
+    "signingIn": "Memproses…",
+    "footer": "Hanya untuk member terdaftar · R.A.G.E"
+  },
+  "nav": {
+    "groups": {
+      "operational": "Operasional",
+      "finance": "Keuangan",
+      "inventory": "Inventory",
+      "account": "Akun",
+      "admin": "Admin"
+    },
+    "home": "Beranda",
+    "order": "Order",
+    "prices": "Harga",
+    "absen": "Absen",
+    "myStoran": "Storan Saya",
+    "storan": "Storan",
+    "kas": "Kas",
+    "rekap": "Rekap",
+    "weeklyProfit": "Profit Mingguan",
+    "drugs": "Drugs",
+    "profile": "Profile",
+    "windows": "Periode",
+    "catalog": "Catalog",
+    "users": "Users",
+    "settings": "Settings",
+    "dashboard": "Dashboard"
+  },
+  "layout": {
+    "menu": "Menu",
+    "logout": "Keluar",
+    "openMenu": "Buka menu",
+    "openProfile": "Buka profile",
+    "profileAria": "Profile {{name}}",
+    "notConnected": "Belum terhubung",
+    "maintenanceBanner": "Mode maintenance aktif — member diblok. Matikan di Admin → Settings."
+  },
+  "common": {
+    "loading": "Memuat…",
+    "loadingStatus": "Memuat status…",
+    "loadingHistory": "Memuat riwayat…",
+    "refresh": "Refresh",
+    "yes": "Ya",
+    "no": "Belum",
+    "notYet": "Belum",
+    "done": "Sudah",
+    "admin": "Admin",
+    "member": "Member",
+    "emptyData": "Belum ada data",
+    "loadFailed": "Gagal memuat",
+    "announcement": "Pengumuman",
+    "period": "Periode"
+  },
+  "home": {
+    "title": "Beranda",
+    "subtitle": "Ringkasan aktivitas, shortcut menu, dan status order kamu",
+    "greetingMorning": "Selamat pagi",
+    "greetingAfternoon": "Selamat siang",
+    "greetingEvening": "Selamat malam",
+    "orderStatus": "Status Order",
+    "orderStatusDesc": "Periode order aktif saat ini",
+    "goToOrder": "Ke halaman Order",
+    "orderSummary": "Ringkasan Order",
+    "orderSummaryDesc": "Semua periode — data milik kamu",
+    "viewFullRekap": "Lihat rekap lengkap",
+    "storanThisWeek": "Storan Minggu Ini",
+    "storanThisWeekDesc": "Read-only — minggu kalender ISO",
+    "periodLabel": "Periode {{label}}",
+    "myStoranDetail": "Detail storan saya",
+    "shortcuts": "Shortcut",
+    "shortcutsDesc": "Akses cepat ke menu utama",
+    "orderHistory": "Riwayat Order Terakhir",
+    "orderHistoryDescNamed": "8 baris terbaru milik {{name}}",
+    "orderHistoryDescGuest": "Login sebagai member terhubung",
+    "notLinkedMember": "Akun belum terhubung ke member",
+    "notLinked": "Akun belum terhubung",
+    "noOrders": "Belum ada order",
+    "noOrdersMessage": "Order kamu akan muncul di sini",
+    "table": {
+      "time": "Waktu",
+      "batch": "Batch",
+      "item": "Item",
+      "qty": "Qty",
+      "subtotal": "Subtotal",
+      "paid": "Bayar",
+      "delivered": "Delivered"
+    },
+    "shortcutDesc": {
+      "order": "Buat order baru",
+      "prices": "Lihat daftar harga",
+      "absen": "Masuk / keluar kota",
+      "rekap": "Rekap order kamu",
+      "storan": "Status storan & nitip",
+      "profile": "Akun & password"
+    }
+  }
+}
