@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 
 type PageHeaderProps = {
   title: string
-  subtitle?: string
+  subtitle?: ReactNode
   children?: ReactNode
   className?: string
 }

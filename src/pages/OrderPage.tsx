@@ -170,7 +170,7 @@ function OrderCartPanel({
           {submitting ? 'Menyimpan…' : 'Submit Order'}
         </Button>
         <p className="text-[11px] text-muted-foreground">
-          Minimal total qty 2 (sama seperti app lama).
+          Minimal total qty 2.
         </p>
       </div>
     </div>
@@ -256,12 +256,48 @@ export function OrderPage() {
     addItem(activeItem, qty)
   }
 
+  const orderSubtitle = useMemo(() => {
+    if (loading) {
+      return (
+        <span className="block text-muted-foreground">
+          Memuat katalog dan status periode order…
+        </span>
+      )
+    }
+
+    const statusLine =
+      isOpen && orderWindow?.orderanke != null
+        ? `${formatOrderankeLabel(orderWindow.orderanke)} buka — isi keranjang lalu submit (min. total qty 2).`
+        : null
+    // Order ditutup — ${detailText || 'tunggu admin buka periode berikutnya.'}
+
+    return (
+      <span className="block space-y-1">
+        {isAdmin ? (
+          <span className="block">
+            Beli senjata, ammo, vest & attachment. Harga & limit item mengikuti
+            role admin (tanpa markup 10%).
+          </span>
+        ) : (
+          <span className="block">
+            Pilih item, isi keranjang, lalu submit order saat periode buka.
+          </span>
+        )}
+        {statusLine ? (
+          <span className="block font-medium text-primary">{statusLine}</span>
+        ) : null}
+      </span>
+    )
+  }, [
+    loading,
+    isOpen,
+    orderWindow?.orderanke,
+    isAdmin,
+  ])
+
   return (
     <PageStack>
-      <PageHeader
-        title="Order"
-        subtitle="Cart + submit ke Supabase & Discord"
-      >
+      <PageHeader title="Order" subtitle={orderSubtitle}>
         <Button variant="outline" size="sm" onClick={() => void refresh()}>
           <RefreshCw className="size-4" />
           <span className="hidden sm:inline">Refresh</span>
@@ -269,7 +305,7 @@ export function OrderPage() {
       </PageHeader>
 
       <Card className="border-border/60 bg-card/80">
-        <CardContent className="space-y-4 pt-6">
+        <CardContent className="space-y-4 ">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant={isOpen ? 'default' : 'destructive'}>
               {statusText}
@@ -305,11 +341,11 @@ export function OrderPage() {
           )}
 
           <div className="space-y-2 border-t border-border/50 pt-3">
-            <p className="text-xs text-muted-foreground">
-              {isAdmin
-                ? 'Harga admin (tanpa markup 10%)'
-                : 'Gun/Attachment sudah include markup 10%'}
-            </p>
+            {isAdmin ? (
+              <p className="text-xs text-muted-foreground">
+                Harga admin (tanpa markup 10%)
+              </p>
+            ) : null}
 
             {!member?.id ? (
               <p className="text-xs text-destructive">

@@ -28,8 +28,7 @@ export function ProfilePage() {
   const [message, setMessage] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
 
-  const email = user?.email ?? ''
-  const username = getUsernameFromEmail(email)
+  const username = getUsernameFromEmail(user?.email)
 
   const handleSavePassword = async (e: FormEvent) => {
     e.preventDefault()
@@ -89,23 +88,9 @@ export function ProfilePage() {
                 {member?.role || '—'}
               </Badge>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="profile-username">Username Sekarang</Label>
-              <Input
-                id="profile-username"
-                value={username}
-                readOnly
-                className="bg-muted/30"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="profile-email">Email Login</Label>
-              <Input
-                id="profile-email"
-                value={email}
-                readOnly
-                className="bg-muted/30"
-              />
+            <div>
+              <p className="text-xs text-muted-foreground">Username</p>
+              <p className="text-base font-semibold">{username || '—'}</p>
             </div>
           </CardContent>
         </Card>
@@ -117,8 +102,7 @@ export function ProfilePage() {
             </CardDescription>
             <CardTitle className="text-lg">Ganti Password</CardTitle>
             <CardDescription>
-              Username login hanya ditampilkan sebagai informasi. Yang bisa
-              diubah dari halaman ini hanya password.
+              Dari halaman ini kamu hanya bisa mengubah password login.
             </CardDescription>
           </CardHeader>
           <CardContent>

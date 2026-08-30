@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Menu, LogOut } from 'lucide-react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -12,12 +11,6 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettings } from '@/contexts/SettingsContext'
 import { BackgroundMusic } from '@/components/BackgroundMusic'
-import {
-  describeOrderWindow,
-  fetchActiveOrderWindow,
-  formatOrderankeLabel,
-  type OrderWindow,
-} from '@/lib/orderWindow'
 
 type NavItem = {
   to: string
@@ -154,7 +147,6 @@ export function DashboardLayout() {
   const { siteNotice, maintenanceMode } = useSettings()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [orderWin, setOrderWin] = useState<OrderWindow | null>(null)
 
   const visibleGroups = useMemo(
     () =>
@@ -179,25 +171,6 @@ export function DashboardLayout() {
   useEffect(() => {
     setMobileOpen(false)
   }, [location.pathname])
-
-  useEffect(() => {
-    let alive = true
-    const load = async () => {
-      const { window } = await fetchActiveOrderWindow('order')
-      if (alive) setOrderWin(window)
-    }
-    void load()
-    const id = window.setInterval(() => void load(), 60_000)
-    return () => {
-      alive = false
-      window.clearInterval(id)
-    }
-  }, [])
-
-  const winInfo = describeOrderWindow(orderWin)
-  const orderBadgeLabel = winInfo.isOpen
-    ? `Open · ${formatOrderankeLabel(orderWin?.orderanke)}`
-    : 'Order ditutup'
 
   const sidebarFooter = (
     <div className="border-t border-border p-3">
@@ -236,42 +209,41 @@ export function DashboardLayout() {
       </Sheet>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-2 sm:p-3">
-        <header className="mb-2 flex shrink-0 flex-col gap-3 rounded-2xl border border-border/60 bg-card/80 px-3 py-3 backdrop-blur-xl sm:mb-3 sm:flex-row sm:items-center sm:justify-between sm:px-4 md:px-5">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0 md:hidden"
-              aria-label="Buka menu"
-              onClick={() => setMobileOpen(true)}
-            >
-              <Menu className="size-5" />
-            </Button>
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-sm font-bold tracking-tight sm:text-base">
-                {pageTitle}
-              </h1>
-              <div className="mt-1">
-                <Badge
-                  variant={winInfo.isOpen ? 'default' : 'destructive'}
-                  title={winInfo.detailText}
-                  className="max-w-full truncate text-[10px] sm:text-xs"
-                >
-                  <span className="truncate">{orderBadgeLabel}</span>
-                </Badge>
-              </div>
-            </div>
+        <header className="mb-2 flex shrink-0 items-center gap-2 rounded-2xl border border-border/60 bg-card/80 px-2.5 py-2.5 backdrop-blur-xl sm:mb-3 sm:justify-between sm:gap-3 sm:px-4 sm:py-3 md:px-5">
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-9 shrink-0 md:hidden"
+            aria-label="Buka menu"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="size-5" />
+          </Button>
+
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-base font-bold tracking-tight sm:text-lg">
+              {pageTitle}
+            </h1>
           </div>
 
           <NavLink
             to="/profile"
-            className="flex w-full min-w-0 items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-2.5 py-2 transition-colors hover:bg-muted/60 sm:w-auto sm:max-w-[240px] sm:px-3"
+            className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-primary/15 text-xs font-bold text-primary transition-colors hover:bg-primary/25 md:hidden"
+            title="Buka profile"
+            aria-label={`Profile ${member?.nama || ''}`}
+          >
+            {initials}
+          </NavLink>
+
+          <NavLink
+            to="/profile"
+            className="hidden min-w-0 items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 transition-colors hover:bg-muted/60 md:flex md:max-w-60"
             title="Buka profile"
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
               {initials}
             </div>
-            <div className="min-w-0 flex-1 truncate sm:text-right">
+            <div className="min-w-0 flex-1 truncate text-right">
               <p className="truncate text-xs font-semibold">
                 {member?.nama || 'Belum terhubung'}
               </p>

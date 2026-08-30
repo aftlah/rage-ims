@@ -49,7 +49,7 @@ function flattenCatalog(catalog: CatalogByCategory): CatalogItem[] {
 }
 
 export function PricesPage() {
-  const { member } = useAuth()
+  const { member, isAdmin } = useAuth()
   const role = member?.role ?? null
 
   const [catalog, setCatalog] = useState<CatalogByCategory>(EMPTY_CATALOG)
@@ -140,7 +140,11 @@ export function PricesPage() {
     <PageStack>
       <PageHeader
         title="Daftar Harga"
-        subtitle="Harga jual catalog (read-only, mirror prices.html lama)"
+        subtitle={
+          isAdmin
+            ? 'Harga jual catalog — admin tanpa markup 10%'
+            : 'Daftar harga item yang bisa dipesan'
+        }
       >
         <Button variant="outline" size="sm" onClick={() => void load()}>
           <RefreshCw className="size-4" />
@@ -152,7 +156,9 @@ export function PricesPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Cari item</CardTitle>
           <CardDescription>
-            Gun & Attachment non-admin +10% markup (sama seperti halaman Order).
+            {isAdmin
+              ? 'Gun & Attachment non-admin +10% markup (sama seperti halaman Order).'
+              : 'Gunakan pencarian atau filter kategori untuk menemukan item.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
