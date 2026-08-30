@@ -18,7 +18,8 @@ values
   ('maintenance_message', '"Sedang maintenance: Sebentar yaa kawan"'::jsonb),
   ('admin_delete_pin', '""'::jsonb),
   ('site_notice', '""'::jsonb),
-  ('weekly_profit_viewers', '[]'::jsonb)
+  ('weekly_profit_viewers', '[]'::jsonb),
+  ('gun_attachment_markup_pct', '10'::jsonb)
 on conflict (key) do nothing;
 
 alter table public.app_settings enable row level security;

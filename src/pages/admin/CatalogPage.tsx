@@ -39,6 +39,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSettings } from '@/contexts/SettingsContext'
 import { useToast } from '@/contexts/ToastContext'
 import {
   ADMIN_CATALOG_CATEGORIES,
@@ -63,6 +64,7 @@ const emptyForm: CatalogUpsertInput = {
 
 export function CatalogPage() {
   const { isAdmin } = useAuth()
+  const { gunAttachmentMarkupPct } = useSettings()
   const toast = useToast()
   const [items, setItems] = useState<CatalogAdminItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -333,7 +335,12 @@ export function CatalogPage() {
                           </TableCell>
                           <TableCell className="font-mono tabular-nums">
                             {fmtUsd(
-                              getEffectivePrice(String(it.kategori), it.price),
+                              getEffectivePrice(
+                                String(it.kategori),
+                                it.price,
+                                null,
+                                gunAttachmentMarkupPct,
+                              ),
                             )}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
@@ -378,7 +385,7 @@ export function CatalogPage() {
               ) : null,
             )}
             <p className="px-3 pt-2 text-xs text-muted-foreground sm:px-4">
-              *Harga jual non-admin (Gun/Attachment × 1.1)
+              *Harga jual non-admin (Gun/Attachment +{gunAttachmentMarkupPct}%)
             </p>
           </CardContent>
         </Card>

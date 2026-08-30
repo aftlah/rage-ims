@@ -2,8 +2,10 @@ import {
   CATALOG_CATEGORIES,
   EMPTY_CATALOG,
   fetchCatalog,
+  reverseGunAttachmentBasePrice,
   type CatalogByCategory,
 } from './catalog'
+import { fetchAppSettings } from './appSettings'
 import { fmtUsd } from './format'
 import { formatOrderankeLabel } from './orderWindow'
 import { fetchOrdersForDashboard, type OrderRow } from './rekapOrders'
@@ -84,6 +86,7 @@ function findCatalogBasePrice(
 function resolveBaseUnitPrice(
   row: OrderRow,
   catalog: CatalogByCategory,
+  markupPct: number,
 ): number {
   const fromCatalog = findCatalogBasePrice(row.item, row.kategori, catalog)
   if (fromCatalog != null) return fromCatalog
@@ -93,16 +96,20 @@ function resolveBaseUnitPrice(
   if (sell <= 0) return 0
 
   if (kat === 'Gun' || kat === 'Attachment') {
-    return Math.round(sell / 1.1)
+    return reverseGunAttachmentBasePrice(sell, markupPct)
   }
 
   return sell
 }
 
-function buildLine(row: OrderRow, catalog: CatalogByCategory): WeeklyProfitLine {
+function buildLine(
+  row: OrderRow,
+  catalog: CatalogByCategory,
+  markupPct: number,
+): WeeklyProfitLine {
   const qty = Number(row.qty) || 0
   const hargaJual = Number(row.harga) || 0
-  const hargaAsli = resolveBaseUnitPrice(row, catalog)
+  const hargaAsli = resolveBaseUnitPrice(row, catalog, markupPct)
   const subtotalJual = Number(row.subtotal) || hargaJual * qty
   const subtotalAsli = hargaAsli * qty
   const untung = subtotalJual - subtotalAsli
@@ -216,9 +223,10 @@ export async function fetchWeeklyProfitReport(
   const month = Math.floor(orderanke / 10)
   const week = orderanke % 10
 
-  const [catalogRes, ordersRes] = await Promise.all([
+  const [catalogRes, ordersRes, settingsRes] = await Promise.all([
     fetchCatalog(),
     fetchOrdersForDashboard({ month, week, name: '' }),
+    fetchAppSettings(),
   ])
 
   if (catalogRes.error) {
@@ -228,8 +236,9 @@ export async function fetchWeeklyProfitReport(
     return { report: null, error: ordersRes.error }
   }
 
+  const markupPct = settingsRes.data.gunAttachmentMarkupPct
   const catalog = catalogRes.catalog || EMPTY_CATALOG
-  const lines = ordersRes.data.map((row) => buildLine(row, catalog))
+  const lines = ordersRes.data.map((row) => buildLine(row, catalog, markupPct))
 
   const totals = lines.reduce(
     (acc, line) => {

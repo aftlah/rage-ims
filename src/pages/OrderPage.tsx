@@ -182,7 +182,7 @@ function OrderCartPanel({
 
 export function OrderPage() {
   const { member, isAdmin } = useAuth()
-  const { maintenanceMode } = useSettings()
+  const { maintenanceMode, gunAttachmentMarkupPct } = useSettings()
   const {
     catalog,
     orderWindow,
@@ -215,6 +215,7 @@ export function OrderPage() {
     nama: member?.nama ?? null,
     role,
     maintenanceBlocked: maintenanceMode && !isAdmin,
+    gunAttachmentMarkupPct,
     onSubmitted: refreshTotals,
   })
 
@@ -282,7 +283,7 @@ export function OrderPage() {
         {isAdmin ? (
           <span className="block">
             Beli senjata, ammo, vest & attachment. Harga & limit item mengikuti
-            role admin (tanpa markup 10%).
+            role admin (tanpa markup {gunAttachmentMarkupPct}%).
           </span>
         ) : (
           <span className="block">
@@ -299,6 +300,7 @@ export function OrderPage() {
     isOpen,
     orderWindow?.orderanke,
     isAdmin,
+    gunAttachmentMarkupPct,
   ])
 
   return (
@@ -361,7 +363,7 @@ export function OrderPage() {
           <div className="space-y-2 border-t border-border/50 pt-3">
             {isAdmin ? (
               <p className="text-xs text-muted-foreground">
-                Harga admin (tanpa markup 10%)
+                Harga admin (tanpa markup {gunAttachmentMarkupPct}%)
               </p>
             ) : null}
 
@@ -447,7 +449,7 @@ export function OrderPage() {
                         {items.map((item) => (
                           <SelectItem key={item.name} value={item.name}>
                             {item.name} (
-                            {fmtUsd(getDisplayPrice(item, catalog, role))})
+                            {fmtUsd(getDisplayPrice(item, catalog, role, gunAttachmentMarkupPct))})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -505,7 +507,7 @@ export function OrderPage() {
                             {item.name}
                           </TableCell>
                           <TableCell className="font-mono tabular-nums text-foreground/90">
-                            {fmtUsd(getDisplayPrice(item, catalog, role))}
+                            {fmtUsd(getDisplayPrice(item, catalog, role, gunAttachmentMarkupPct))}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {max == null ? '—' : max}

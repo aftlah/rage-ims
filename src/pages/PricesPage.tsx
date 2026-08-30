@@ -25,6 +25,7 @@ import {
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSettings } from '@/contexts/SettingsContext'
 import {
   CATALOG_CATEGORIES,
   EMPTY_CATALOG,
@@ -50,6 +51,7 @@ function flattenCatalog(catalog: CatalogByCategory): CatalogItem[] {
 
 export function PricesPage() {
   const { member, isAdmin } = useAuth()
+  const { gunAttachmentMarkupPct } = useSettings()
   const role = member?.role ?? null
 
   const [catalog, setCatalog] = useState<CatalogByCategory>(EMPTY_CATALOG)
@@ -142,7 +144,7 @@ export function PricesPage() {
         title="Daftar Harga"
         subtitle={
           isAdmin
-            ? 'Harga jual catalog — admin tanpa markup 10%'
+            ? `Harga jual catalog — admin tanpa markup ${gunAttachmentMarkupPct}%`
             : 'Daftar harga item yang bisa dipesan'
         }
       >
@@ -157,7 +159,7 @@ export function PricesPage() {
           <CardTitle className="text-base">Cari item</CardTitle>
           <CardDescription>
             {isAdmin
-              ? 'Gun & Attachment non-admin +10% markup (sama seperti halaman Order).'
+              ? `Gun & Attachment non-admin +${gunAttachmentMarkupPct}% markup (sama seperti halaman Order).`
               : 'Gunakan pencarian atau filter kategori untuk menemukan item.'}
           </CardDescription>
         </CardHeader>
@@ -254,7 +256,12 @@ export function PricesPage() {
                         </TableCell>
                       </TableRow>
                       {group.items.map((item) => {
-                        const sellPrice = getDisplayPrice(item, catalog, role)
+                        const sellPrice = getDisplayPrice(
+                          item,
+                          catalog,
+                          role,
+                          gunAttachmentMarkupPct,
+                        )
                         return (
                           <TableRow key={`${item.kategori}-${item.name}`}>
                             <TableCell className="font-medium">

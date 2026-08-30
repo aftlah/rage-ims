@@ -19,6 +19,7 @@ type UseOrderCartArgs = {
   nama: string | null
   role: string | null
   maintenanceBlocked?: boolean
+  gunAttachmentMarkupPct?: number
   onSubmitted: () => Promise<void>
 }
 
@@ -45,6 +46,7 @@ export function useOrderCart(args: UseOrderCartArgs) {
         role: args.role,
         nama: args.nama,
         isOpen: args.isOpen,
+        gunAttachmentMarkupPct: args.gunAttachmentMarkupPct,
       })
       if ('error' in result) {
         toast.error(result.error)
@@ -54,7 +56,7 @@ export function useOrderCart(args: UseOrderCartArgs) {
       toast.success(`${item.name} ditambahkan`)
       return true
     },
-    [args.catalog, args.itemTotals, args.isOpen, args.nama, args.role, cart, toast],
+    [args.catalog, args.itemTotals, args.isOpen, args.nama, args.role, args.gunAttachmentMarkupPct, cart, toast],
   )
 
   const updateQty = useCallback((index: number, qty: number) => {

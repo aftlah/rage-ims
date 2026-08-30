@@ -145,6 +145,7 @@ export function addItemToCart(args: {
   role: string | null
   nama: string | null
   isOpen: boolean
+  gunAttachmentMarkupPct?: number
 }): { cart: CartLine[] } | { error: string } {
   if (!args.isOpen) {
     return { error: 'Order belum dibuka atau sudah ditutup' }
@@ -154,6 +155,7 @@ export function addItemToCart(args: {
   const isLeo = String(args.nama || '').toLowerCase() === 'leo'
   const itemName = args.item.name
   const kategori = args.item.kategori
+  const markupPct = args.gunAttachmentMarkupPct
 
   if (itemName === MICRO_FULL_ATTACHMENT_BUNDLE_NAME) {
     for (const entry of MICRO_FULL_ATTACHMENT_COMPONENTS) {
@@ -181,7 +183,12 @@ export function addItemToCart(args: {
       nextCart = pushOrIncrement(nextCart, {
         item: entry.name,
         kategori: entry.kategori,
-        price: getEffectivePrice(entry.kategori, itemInCatalog.price, args.role),
+        price: getEffectivePrice(
+          entry.kategori,
+          itemInCatalog.price,
+          args.role,
+          markupPct,
+        ),
         qty,
         scrap: itemInCatalog.scrap || 0,
       })
@@ -216,7 +223,7 @@ export function addItemToCart(args: {
     cart: pushOrIncrement(args.cart, {
       item: itemName,
       kategori,
-      price: getEffectivePrice(kategori, args.item.price, args.role),
+      price: getEffectivePrice(kategori, args.item.price, args.role, markupPct),
       qty,
       scrap: args.item.scrap || 0,
     }),
