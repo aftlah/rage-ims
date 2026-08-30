@@ -37,6 +37,7 @@ const navGroups: NavGroup[] = [
     title: 'Operasional',
     items: [
       { to: '/order', label: 'Order', icon: '📋' },
+      { to: '/prices', label: 'Harga', icon: '💲' },
       { to: '/absen', label: 'Absen', icon: '📍' },
     ],
   },
@@ -53,6 +54,10 @@ const navGroups: NavGroup[] = [
     items: [{ to: '/drugs', label: 'Drugs', icon: '🧪', adminOnly: true }],
   },
   {
+    title: 'Akun',
+    items: [{ to: '/profile', label: 'Profile', icon: '👤' }],
+  },
+  {
     title: 'Admin',
     adminOnly: true,
     items: [
@@ -66,11 +71,13 @@ const navGroups: NavGroup[] = [
 
 const pageTitles: Record<string, string> = {
   '/order': 'Order',
+  '/prices': 'Harga',
   '/absen': 'Absen',
   '/storan': 'Storan',
   '/kas': 'Kas',
   '/rekap': 'Rekap',
   '/drugs': 'Drugs',
+  '/profile': 'Profile',
   '/admin/windows': 'Periode',
   '/admin/catalog': 'Catalog',
   '/admin/users': 'Users',
@@ -256,7 +263,11 @@ export function DashboardLayout() {
             </div>
           </div>
 
-          <div className="flex w-full min-w-0 items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-2.5 py-2 sm:w-auto sm:max-w-[240px] sm:px-3">
+          <NavLink
+            to="/profile"
+            className="flex w-full min-w-0 items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-2.5 py-2 transition-colors hover:bg-muted/60 sm:w-auto sm:max-w-[240px] sm:px-3"
+            title="Buka profile"
+          >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
               {initials}
             </div>
@@ -268,7 +279,7 @@ export function DashboardLayout() {
                 {member?.role || '—'}
               </p>
             </div>
-          </div>
+          </NavLink>
         </header>
 
         {siteNotice.trim() ? (

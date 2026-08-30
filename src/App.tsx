@@ -16,6 +16,8 @@ import { CatalogPage } from './pages/admin/CatalogPage'
 import { OrderWindowsPage } from './pages/admin/OrderWindowsPage'
 import { SettingsPage } from './pages/admin/SettingsPage'
 import { UsersPage } from './pages/admin/UsersPage'
+import { PricesPage } from './pages/PricesPage'
+import { ProfilePage } from './pages/ProfilePage'
 
 export default function App() {
   return (
@@ -32,6 +34,8 @@ export default function App() {
                 <Route path="/" element={<DashboardLayout />}>
                   <Route index element={<Navigate to="/rekap" replace />} />
                   <Route path="order" element={<OrderPage />} />
+                  <Route path="prices" element={<PricesPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
                   <Route path="rekap" element={<RekapPage />} />
                   <Route path="absen" element={<AbsenPage />} />
                   <Route element={<AdminRoute />}>

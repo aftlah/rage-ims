@@ -15,10 +15,6 @@ function getBackgroundAudio() {
   return bgAudio
 }
 
-/**
- * Plays R.A.G.E theme on normal app pages.
- * Uses a shared Audio instance so tab switches / remounts don't restart the track.
- */
 export function BackgroundMusic() {
   useEffect(() => {
     const audio = getBackgroundAudio()

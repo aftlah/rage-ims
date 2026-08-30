@@ -114,3 +114,47 @@ export async function markSessionLogout(authUserId: string): Promise<void> {
     // optional logging — ignore failures
   }
 }
+
+export function getUsernameFromEmail(email: string | null | undefined): string {
+  const raw = String(email || '').trim()
+  if (!raw) return ''
+  return raw.split('@')[0] || ''
+}
+
+export function validatePasswordStrength(
+  password: string,
+): { ok: true } | { ok: false; message: string } {
+  const value = String(password || '')
+  if (value.length < 6) {
+    return { ok: false, message: 'Password minimal 6 karakter' }
+  }
+  return { ok: true }
+}
+
+export async function changeCurrentUserPassword(
+  newPassword: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const { data: userRes, error: userError } = await supabase.auth.getUser()
+    if (userError) {
+      return { ok: false, error: userError.message }
+    }
+
+    const user = userRes.user
+    const meta = user?.user_metadata ?? {}
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+      data: { ...meta, must_change_password: false },
+    })
+
+    if (error) {
+      return { ok: false, error: error.message }
+    }
+    return { ok: true }
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : 'Gagal mengubah password',
+    }
+  }
+}
