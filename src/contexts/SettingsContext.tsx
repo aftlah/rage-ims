@@ -21,6 +21,7 @@ type SettingsContextValue = {
   maintenanceMessage: string
   adminDeletePin: string
   siteNotice: string
+  weeklyProfitViewerIds: number[]
   loading: boolean
   error: string | null
   refresh: () => Promise<void>
@@ -30,6 +31,7 @@ type SettingsContextValue = {
       maintenanceMessage: string
       adminDeletePin: string
       siteNotice: string
+      weeklyProfitViewerIds: number[]
     }>,
   ) => Promise<{ ok: true } | { ok: false; error: string }>
 }
@@ -68,6 +70,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         maintenanceMessage: string
         adminDeletePin: string
         siteNotice: string
+        weeklyProfitViewerIds: number[]
       }>,
     ) => {
       const res = await saveAppSettingsPatch(patch, user?.id ?? null)
@@ -85,6 +88,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       maintenanceMessage: settings.maintenanceMessage,
       adminDeletePin: settings.adminDeletePin,
       siteNotice: settings.siteNotice,
+      weeklyProfitViewerIds: settings.weeklyProfitViewerIds,
       loading,
       error,
       refresh,

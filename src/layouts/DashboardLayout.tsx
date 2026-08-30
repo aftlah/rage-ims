@@ -11,12 +11,14 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { useSettings } from '@/contexts/SettingsContext'
 import { BackgroundMusic } from '@/components/BackgroundMusic'
+import { canAccessWeeklyProfit } from '@/lib/weeklyProfitAccess'
 
 type NavItem = {
   to: string
   label: string
   icon: string
   adminOnly?: boolean
+  weeklyProfitOnly?: boolean
 }
 
 type NavGroup = {
@@ -42,6 +44,12 @@ const navGroups: NavGroup[] = [
       { to: '/storan', label: 'Storan', icon: '📦', adminOnly: true },
       { to: '/kas', label: 'Kas', icon: '💰', adminOnly: true },
       { to: '/rekap', label: 'Rekap', icon: '📊' },
+      {
+        to: '/rekap-untung',
+        label: 'Rekap Untung',
+        icon: '💹',
+        weeklyProfitOnly: true,
+      },
     ],
   },
   {
@@ -73,6 +81,7 @@ const pageTitles: Record<string, string> = {
   '/storan': 'Storan',
   '/kas': 'Kas',
   '/rekap': 'Rekap',
+  '/rekap-untung': 'Rekap Untung',
   '/drugs': 'Drugs',
   '/profile': 'Profile',
   '/admin/windows': 'Periode',
@@ -148,9 +157,11 @@ function SidebarNav({
 
 export function DashboardLayout() {
   const { member, isAdmin, signOut } = useAuth()
-  const { siteNotice, maintenanceMode } = useSettings()
+  const { siteNotice, maintenanceMode, weeklyProfitViewerIds } = useSettings()
   const location = useLocation()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const canWeeklyProfit = canAccessWeeklyProfit(member, weeklyProfitViewerIds)
 
   const visibleGroups = useMemo(
     () =>
@@ -158,10 +169,14 @@ export function DashboardLayout() {
         .filter((g) => !g.adminOnly || isAdmin)
         .map((g) => ({
           ...g,
-          items: g.items.filter((item) => !item.adminOnly || isAdmin),
+          items: g.items.filter((item) => {
+            if (item.adminOnly && !isAdmin) return false
+            if (item.weeklyProfitOnly && !canWeeklyProfit) return false
+            return true
+          }),
         }))
         .filter((g) => g.items.length > 0),
-    [isAdmin],
+    [isAdmin, canWeeklyProfit],
   )
   const pageTitle =
     pageTitles[location.pathname] ||

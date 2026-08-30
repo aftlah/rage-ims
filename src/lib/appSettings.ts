@@ -1,3 +1,4 @@
+import { parseWeeklyProfitViewerIds } from './weeklyProfitAccess'
 import { supabase } from './supabase'
 
 export const APP_SETTING_KEYS = [
@@ -5,6 +6,7 @@ export const APP_SETTING_KEYS = [
   'maintenance_message',
   'admin_delete_pin',
   'site_notice',
+  'weekly_profit_viewers',
 ] as const
 
 export type AppSettingKey = (typeof APP_SETTING_KEYS)[number]
@@ -14,6 +16,7 @@ export type AppSettings = {
   maintenanceMessage: string
   adminDeletePin: string
   siteNotice: string
+  weeklyProfitViewerIds: number[]
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -21,6 +24,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   maintenanceMessage: 'Sedang maintenance: Sebentar yaa kawan',
   adminDeletePin: '',
   siteNotice: '',
+  weeklyProfitViewerIds: [],
 }
 
 type SettingRow = {
@@ -72,6 +76,9 @@ export function rowsToAppSettings(rows: SettingRow[]): AppSettings {
     siteNotice: asString(
       map.get('site_notice'),
       DEFAULT_APP_SETTINGS.siteNotice,
+    ),
+    weeklyProfitViewerIds: parseWeeklyProfitViewerIds(
+      map.get('weekly_profit_viewers'),
     ),
   }
 }
@@ -135,7 +142,7 @@ export async function fetchAppSettings(): Promise<{
 
 export async function upsertAppSetting(
   key: AppSettingKey,
-  value: boolean | string,
+  value: boolean | string | number[],
   updatedBy: string | null,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   if (key === 'admin_delete_pin') {
@@ -169,10 +176,11 @@ export async function saveAppSettingsPatch(
     maintenanceMessage: string
     adminDeletePin: string
     siteNotice: string
+    weeklyProfitViewerIds: number[]
   }>,
   updatedBy: string | null,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const entries: Array<[AppSettingKey, boolean | string]> = []
+  const entries: Array<[AppSettingKey, boolean | string | number[]]> = []
 
   if (patch.maintenanceMode !== undefined) {
     entries.push(['maintenance_mode', patch.maintenanceMode])
@@ -185,6 +193,9 @@ export async function saveAppSettingsPatch(
   }
   if (patch.siteNotice !== undefined) {
     entries.push(['site_notice', patch.siteNotice])
+  }
+  if (patch.weeklyProfitViewerIds !== undefined) {
+    entries.push(['weekly_profit_viewers', patch.weeklyProfitViewerIds])
   }
 
   for (const [key, value] of entries) {

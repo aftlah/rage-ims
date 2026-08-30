@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { SettingsProvider } from './contexts/SettingsContext'
 import { AdminRoute } from './components/AdminRoute'
+import { WeeklyProfitRoute } from './components/WeeklyProfitRoute'
 import { MaintenanceGate } from './components/MaintenanceGate'
 import { GuestRoute, ProtectedRoute } from './components/ProtectedRoute'
 import { DashboardLayout } from './layouts/DashboardLayout'
@@ -20,6 +21,7 @@ import { PricesPage } from './pages/PricesPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { HomePage } from './pages/HomePage'
 import { MemberStoranPage } from './pages/MemberStoranPage'
+import { WeeklyProfitPage } from './pages/WeeklyProfitPage'
 
 export default function App() {
   return (
@@ -42,6 +44,9 @@ export default function App() {
                   <Route path="storan-saya" element={<MemberStoranPage />} />
                   <Route path="rekap" element={<RekapPage />} />
                   <Route path="absen" element={<AbsenPage />} />
+                  <Route element={<WeeklyProfitRoute />}>
+                    <Route path="rekap-untung" element={<WeeklyProfitPage />} />
+                  </Route>
                   <Route element={<AdminRoute />}>
                     <Route path="storan" element={<StoranPage />} />
                     <Route path="kas" element={<KasPage />} />
