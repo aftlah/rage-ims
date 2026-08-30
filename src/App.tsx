@@ -33,11 +33,11 @@ export default function App() {
                   <Route index element={<Navigate to="/rekap" replace />} />
                   <Route path="order" element={<OrderPage />} />
                   <Route path="rekap" element={<RekapPage />} />
-                  <Route path="storan" element={<StoranPage />} />
                   <Route path="absen" element={<AbsenPage />} />
-                  <Route path="kas" element={<KasPage />} />
-                  <Route path="drugs" element={<DrugsPage />} />
                   <Route element={<AdminRoute />}>
+                    <Route path="storan" element={<StoranPage />} />
+                    <Route path="kas" element={<KasPage />} />
+                    <Route path="drugs" element={<DrugsPage />} />
                     <Route path="admin/catalog" element={<CatalogPage />} />
                     <Route path="admin/users" element={<UsersPage />} />
                     <Route path="admin/windows" element={<OrderWindowsPage />} />

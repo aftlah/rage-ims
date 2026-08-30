@@ -23,6 +23,7 @@ type NavItem = {
   to: string
   label: string
   icon: string
+  adminOnly?: boolean
 }
 
 type NavGroup = {
@@ -42,14 +43,14 @@ const navGroups: NavGroup[] = [
   {
     title: 'Keuangan',
     items: [
-      { to: '/storan', label: 'Storan', icon: '📦' },
-      { to: '/kas', label: 'Kas', icon: '💰' },
+      { to: '/storan', label: 'Storan', icon: '📦', adminOnly: true },
+      { to: '/kas', label: 'Kas', icon: '💰', adminOnly: true },
       { to: '/rekap', label: 'Rekap', icon: '📊' },
     ],
   },
   {
     title: 'Inventory',
-    items: [{ to: '/drugs', label: 'Drugs', icon: '🧪' }],
+    items: [{ to: '/drugs', label: 'Drugs', icon: '🧪', adminOnly: true }],
   },
   {
     title: 'Admin',
@@ -148,7 +149,17 @@ export function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [orderWin, setOrderWin] = useState<OrderWindow | null>(null)
 
-  const visibleGroups = navGroups.filter((g) => !g.adminOnly || isAdmin)
+  const visibleGroups = useMemo(
+    () =>
+      navGroups
+        .filter((g) => !g.adminOnly || isAdmin)
+        .map((g) => ({
+          ...g,
+          items: g.items.filter((item) => !item.adminOnly || isAdmin),
+        }))
+        .filter((g) => g.items.length > 0),
+    [isAdmin],
+  )
   const pageTitle =
     pageTitles[location.pathname] ||
     Object.entries(pageTitles).find(([path]) =>
