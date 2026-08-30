@@ -122,7 +122,7 @@ export function HomePage() {
       </PageHeader>
 
       <Card className="border-border/60 bg-gradient-to-br from-card/90 to-primary/5">
-        <CardContent className="pt-6">
+        <CardContent className="">
           <p className="text-sm text-muted-foreground">{greeting},</p>
           <h3 className="mt-1 text-2xl font-bold tracking-tight">
             {member?.nama || 'Member'}
