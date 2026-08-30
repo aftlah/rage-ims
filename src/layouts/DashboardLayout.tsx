@@ -32,7 +32,7 @@ const navGroups: NavGroup[] = [
       { to: '/home', label: 'Beranda', icon: '🏠' },
       { to: '/order', label: 'Order', icon: '📋' },
       { to: '/prices', label: 'Harga', icon: '💲' },
-      { to: '/absen', label: 'Absen', icon: '📍' },
+      // { to: '/absen', label: 'Absen', icon: '📍' },
     ],
   },
   {
