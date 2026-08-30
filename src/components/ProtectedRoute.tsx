@@ -36,7 +36,7 @@ export function GuestRoute() {
   }
 
   if (session) {
-    return <Navigate to="/rekap" replace />
+    return <Navigate to="/home" replace />
   }
 
   return <Outlet />

@@ -32,7 +32,7 @@ export function LoginPage() {
         setError(result.error)
         return
       }
-      navigate('/rekap', { replace: true })
+      navigate('/home', { replace: true })
     } finally {
       setSubmitting(false)
     }

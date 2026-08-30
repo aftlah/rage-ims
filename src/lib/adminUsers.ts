@@ -1,4 +1,5 @@
 import { AUTH_EMAIL_DOMAIN } from './constants'
+import { syncAuthUserEmail } from './adminAuthSync'
 import { rpcAdminInsertAuditLog, rpcAdminPatchMember } from './adminRpc'
 import { supabase } from './supabase'
 
@@ -105,8 +106,7 @@ export async function updateMemberRole(args: {
 }
 
 /**
- * Patch members.email/username via RPC only.
- * Auth login email sync requires service role → Edge Function TODO.
+ * Admin-only: sync Auth login email + patch members via RPC.
  */
 export async function patchMemberProfileViaRpc(args: {
   memberId: number
@@ -122,7 +122,21 @@ export async function patchMemberProfileViaRpc(args: {
     return { ok: false, error: 'Username minimal 3 karakter' }
   }
 
+  const targetAuthUserId = String(args.targetAuthUserId || '').trim()
+  if (!targetAuthUserId) {
+    return { ok: false, error: 'Target belum terhubung ke auth_user_id' }
+  }
+
   const nextEmail = `${username}@${AUTH_EMAIL_DOMAIN}`
+
+  const syncRes = await syncAuthUserEmail({
+    targetAuthUserId,
+    email: nextEmail,
+  })
+  if (!syncRes.ok) {
+    return { ok: false, error: `Gagal ubah email login: ${syncRes.error}` }
+  }
+
   const patchRes = await rpcAdminPatchMember(args.memberId, {
     email: nextEmail,
     username,
@@ -130,14 +144,13 @@ export async function patchMemberProfileViaRpc(args: {
   if (!patchRes.ok) return patchRes
 
   await rpcAdminInsertAuditLog({
-    action: 'set_username_members_only',
+    action: 'set_username_direct',
     actor_auth_user_id: args.actorAuthUserId,
-    target_auth_user_id: args.targetAuthUserId,
+    target_auth_user_id: targetAuthUserId,
     target_member_id: args.memberId,
     meta: {
       new_email: nextEmail,
       new_username: username,
-      note: 'Auth email tidak diubah — butuh Edge Function',
     },
   })
 

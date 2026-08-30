@@ -44,6 +44,10 @@ import { useSettings } from '@/contexts/SettingsContext'
 import { useOrderCart } from '@/features/order/useOrderCart'
 import { useOrderCatalog } from '@/features/order/useOrderCatalog'
 import {
+  formatCountdown,
+  useCountdown,
+} from '@/features/order/useCountdown'
+import {
   CATALOG_CATEGORIES,
   getDisplayPrice,
   getItemMax,
@@ -256,6 +260,11 @@ export function OrderPage() {
     addItem(activeItem, qty)
   }
 
+  const remainingMs = useCountdown(
+    isOpen && orderWindow ? orderWindow.end_time : null,
+  )
+  const countdownLabel = formatCountdown(remainingMs)
+
   const orderSubtitle = useMemo(() => {
     if (loading) {
       return (
@@ -318,7 +327,18 @@ export function OrderPage() {
           </div>
 
           {orderWindow && isOpen ? (
-            <dl className="grid grid-cols-2 gap-2.5">
+            <>
+              {countdownLabel ? (
+                <div className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5">
+                  <p className="text-[10px] font-bold tracking-[0.12em] text-amber-200/80 uppercase">
+                    Order tutup dalam
+                  </p>
+                  <p className="mt-1 font-mono text-lg font-bold text-amber-100 tabular-nums">
+                    {remainingMs === 0 ? 'Waktu habis' : countdownLabel}
+                  </p>
+                </div>
+              ) : null}
+              <dl className="grid grid-cols-2 gap-2.5">
               <div className="rounded-xl border border-border/50 bg-muted/15 px-3 py-2.5">
                 <dt className="text-[10px] font-bold tracking-[0.12em] text-muted-foreground uppercase">
                   Buka
@@ -336,6 +356,7 @@ export function OrderPage() {
                 </dd>
               </div>
             </dl>
+            </>
           ) : (
             <p className="text-sm text-muted-foreground">{detailText}</p>
           )}

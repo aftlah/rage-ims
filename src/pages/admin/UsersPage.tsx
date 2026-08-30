@@ -126,9 +126,7 @@ export function UsersPage() {
       setMessage(res.error)
       return
     }
-    setMessage(
-      `Username/email di tabel members diupdate ke ${res.email}. Auth login email belum ikut (TODO Edge Function).`,
-    )
+    setMessage(`Username berhasil diubah — login sekarang: ${res.email}`)
     await refresh()
     setSelected((prev) =>
       prev && prev.id === selected.id
@@ -143,7 +141,7 @@ export function UsersPage() {
     <PageStack>
       <PageHeader
         title="Admin Users"
-        subtitle="List members + patch via RPC (tanpa service role)"
+        subtitle="Kelola role & username member (hanya admin)"
       >
         <Button variant="outline" size="sm" onClick={() => void refresh()}>
           <RefreshCw className="size-4" />
@@ -285,17 +283,17 @@ export function UsersPage() {
 
           <Card className="border-border/60 bg-card/80">
             <CardHeader>
-              <CardTitle>Patch Username / Email (RPC)</CardTitle>
+              <CardTitle>Ubah Username Login</CardTitle>
               <CardDescription>
-                Via <code>rage_admin_patch_member</code> +{' '}
-                <code>rage_admin_insert_audit_log</code>. Tidak mengubah Auth
-                login.
+                Hanya admin. Mengubah email Supabase Auth + tabel{' '}
+                <code>members</code> sekaligus via Edge Function{' '}
+                <code>admin-sync-user</code>.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap items-end gap-3">
                 <div className="flex min-w-[180px] flex-1 flex-col gap-2">
-                  <Label>Username</Label>
+                  <Label>Username baru</Label>
                   <Input
                     value={usernameDraft}
                     disabled={!selected || busy}
@@ -307,30 +305,9 @@ export function UsersPage() {
                   disabled={!selected || busy}
                   onClick={() => void handlePatchUsername()}
                 >
-                  Simpan via RPC
+                  Simpan Username
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 border-dashed bg-muted/20">
-            <CardHeader>
-              <CardTitle className="text-primary">
-                TODO — Edge Function
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-                <li>
-                  Reset / set password user (lama: Auth Admin API + service
-                  role)
-                </li>
-                <li>
-                  Sync email Auth saat ganti username (lama:
-                  supabaseAdminUpdateUser)
-                </li>
-                <li>Jangan taruh SERVICE_ROLE_KEY di browser</li>
-              </ul>
             </CardContent>
           </Card>
 

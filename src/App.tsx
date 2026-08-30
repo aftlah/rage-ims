@@ -18,6 +18,8 @@ import { SettingsPage } from './pages/admin/SettingsPage'
 import { UsersPage } from './pages/admin/UsersPage'
 import { PricesPage } from './pages/PricesPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { HomePage } from './pages/HomePage'
+import { MemberStoranPage } from './pages/MemberStoranPage'
 
 export default function App() {
   return (
@@ -32,10 +34,12 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<MaintenanceGate />}>
                 <Route path="/" element={<DashboardLayout />}>
-                  <Route index element={<Navigate to="/rekap" replace />} />
+                  <Route index element={<Navigate to="/home" replace />} />
+                  <Route path="home" element={<HomePage />} />
                   <Route path="order" element={<OrderPage />} />
                   <Route path="prices" element={<PricesPage />} />
                   <Route path="profile" element={<ProfilePage />} />
+                  <Route path="storan-saya" element={<MemberStoranPage />} />
                   <Route path="rekap" element={<RekapPage />} />
                   <Route path="absen" element={<AbsenPage />} />
                   <Route element={<AdminRoute />}>
@@ -51,7 +55,7 @@ export default function App() {
               </Route>
             </Route>
 
-            <Route path="*" element={<Navigate to="/rekap" replace />} />
+            <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>
         </BrowserRouter>
       </SettingsProvider>

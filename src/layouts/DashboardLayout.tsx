@@ -29,6 +29,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Operasional',
     items: [
+      { to: '/home', label: 'Beranda', icon: '🏠' },
       { to: '/order', label: 'Order', icon: '📋' },
       { to: '/prices', label: 'Harga', icon: '💲' },
       { to: '/absen', label: 'Absen', icon: '📍' },
@@ -37,6 +38,7 @@ const navGroups: NavGroup[] = [
   {
     title: 'Keuangan',
     items: [
+      { to: '/storan-saya', label: 'Storan Saya', icon: '📥' },
       { to: '/storan', label: 'Storan', icon: '📦', adminOnly: true },
       { to: '/kas', label: 'Kas', icon: '💰', adminOnly: true },
       { to: '/rekap', label: 'Rekap', icon: '📊' },
@@ -63,9 +65,11 @@ const navGroups: NavGroup[] = [
 ]
 
 const pageTitles: Record<string, string> = {
+  '/home': 'Beranda',
   '/order': 'Order',
   '/prices': 'Harga',
   '/absen': 'Absen',
+  '/storan-saya': 'Storan Saya',
   '/storan': 'Storan',
   '/kas': 'Kas',
   '/rekap': 'Rekap',
