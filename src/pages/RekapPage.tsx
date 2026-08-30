@@ -265,11 +265,11 @@ export function RekapPage() {
           },
         ].map((card) => (
           <Card key={card.label} className="border-border/60 bg-card/80">
-            <CardContent className="pt-6 text-center">
+            <CardContent className="py-3 text-center">
               <CardDescription className="text-[10px] tracking-[0.18em] uppercase">
                 {card.label}
               </CardDescription>
-              <p className="mt-2 font-mono text-xl font-bold text-primary">
+              <p className="mt-1 font-mono text-xl font-bold text-primary">
                 {card.value}
               </p>
             </CardContent>

@@ -87,8 +87,8 @@ export function WeeklyProfitPage() {
   return (
     <PageStack>
       <PageHeader
-        title="Rekap Untung Mingguan"
-        subtitle="Per orderanke — bandingkan harga asli (catalog) vs harga jual (+ markup Gun/Attachment)"
+        title="Profit Mingguan"
+        subtitle="Rekap per orderanke — harga asli vs harga jual & total untung"
       >
         <Button variant="outline" size="sm" onClick={() => void loadOptions()}>
           <RefreshCw className="size-4" />

@@ -45,7 +45,7 @@ export default function App() {
                   <Route path="rekap" element={<RekapPage />} />
                   <Route path="absen" element={<AbsenPage />} />
                   <Route element={<WeeklyProfitRoute />}>
-                    <Route path="rekap-untung" element={<WeeklyProfitPage />} />
+                    <Route path="profit-mingguan" element={<WeeklyProfitPage />} />
                   </Route>
                   <Route element={<AdminRoute />}>
                     <Route path="storan" element={<StoranPage />} />

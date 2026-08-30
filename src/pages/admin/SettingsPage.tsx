@@ -214,9 +214,9 @@ export function SettingsPage() {
 
       <Card className="border-border/60 bg-card/80">
         <CardHeader>
-          <CardTitle>Akses Rekap Untung Mingguan</CardTitle>
+          <CardTitle>Akses Profit Mingguan</CardTitle>
           <CardDescription>
-            Pilih member yang boleh membuka halaman Rekap Untung. Admin selalu
+            Pilih member yang boleh membuka halaman Profit Mingguan. Admin selalu
             punya akses.
           </CardDescription>
         </CardHeader>
@@ -254,7 +254,7 @@ export function SettingsPage() {
           )}
           <p className="text-xs text-muted-foreground">
             {selectedViewerIds.length} member dipilih untuk akses{' '}
-            <code>/rekap-untung</code>
+            <code>/profit-mingguan</code>
           </p>
         </CardContent>
       </Card>
