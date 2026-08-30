@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { List, RefreshCw } from 'lucide-react'
 import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,6 +9,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -34,8 +41,92 @@ import { formatOrderankeLabel } from '@/lib/orderWindow'
 import {
   fetchOrderankeWeekOptions,
   fetchWeeklyProfitReport,
+  type WeeklyProfitLine,
   type WeeklyProfitReport,
 } from '@/lib/weeklyProfit'
+
+function MemberOrderDetailDialog({
+  member,
+  lines,
+  onClose,
+}: {
+  member: string
+  lines: WeeklyProfitLine[]
+  onClose: () => void
+}) {
+  const totals = useMemo(
+    () =>
+      lines.reduce(
+        (acc, line) => {
+          acc.qty += line.qty
+          acc.subtotalJual += line.subtotalJual
+          acc.subtotalAsli += line.subtotalAsli
+          acc.untung += line.untung
+          return acc
+        },
+        { qty: 0, subtotalJual: 0, subtotalAsli: 0, untung: 0 },
+      ),
+    [lines],
+  )
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Detail Order — {member}</DialogTitle>
+          <DialogDescription>
+            {lines.length} baris · qty {totals.qty}
+          </DialogDescription>
+        </DialogHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Item</TableHead>
+              <TableHead className="text-center">Qty</TableHead>
+              <TableHead className="text-right">Harga jual</TableHead>
+              <TableHead className="text-right">Harga asli</TableHead>
+              <TableHead className="text-right">Untung</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {lines.map((line) => (
+              <TableRow key={line.id}>
+                <TableCell className="font-medium">{line.item}</TableCell>
+                <TableCell className="text-center text-muted-foreground">
+                  {line.qty}
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {fmtUsd(line.hargaJual)}
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {fmtUsd(line.hargaAsli)}
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {fmtUsd(line.untung)}
+                </TableCell>
+              </TableRow>
+            ))}
+            <TableRow>
+              <TableCell className="font-semibold">Total</TableCell>
+              <TableCell className="text-center font-semibold">
+                {totals.qty}
+              </TableCell>
+              <TableCell className="text-right font-mono font-semibold tabular-nums">
+                {fmtUsd(totals.subtotalJual)}
+              </TableCell>
+              <TableCell className="text-right font-mono font-semibold tabular-nums">
+                {fmtUsd(totals.subtotalAsli)}
+              </TableCell>
+              <TableCell className="text-right font-mono font-semibold text-primary tabular-nums">
+                {fmtUsd(totals.untung)}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 export function WeeklyProfitPage() {
   const [options, setOptions] = useState<number[]>([])
@@ -44,6 +135,7 @@ export function WeeklyProfitPage() {
   const [loading, setLoading] = useState(true)
   const [loadingReport, setLoadingReport] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [detailMember, setDetailMember] = useState<string | null>(null)
 
   const loadOptions = useCallback(async () => {
     setLoading(true)
@@ -83,6 +175,21 @@ export function WeeklyProfitPage() {
     if (!report || report.totals.subtotalAsli <= 0) return null
     return (report.totals.untung / report.totals.subtotalAsli) * 100
   }, [report])
+
+  const linesByMember = useMemo(() => {
+    if (!report) return new Map<string, WeeklyProfitLine[]>()
+    const map = new Map<string, WeeklyProfitLine[]>()
+    for (const line of report.lines) {
+      const prev = map.get(line.nama) || []
+      prev.push(line)
+      map.set(line.nama, prev)
+    }
+    return map
+  }, [report])
+
+  const detailLines = detailMember
+    ? linesByMember.get(detailMember) || []
+    : []
 
   return (
     <PageStack>
@@ -178,6 +285,7 @@ export function WeeklyProfitPage() {
                       <TableHead className="text-right">Jual</TableHead>
                       <TableHead className="text-right">Asli</TableHead>
                       <TableHead className="text-right">Untung</TableHead>
+                      <TableHead className="w-24 text-center">Detail</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -198,6 +306,16 @@ export function WeeklyProfitPage() {
                         </TableCell>
                         <TableCell className="text-right font-mono font-semibold text-primary tabular-nums">
                           {fmtUsd(row.untung)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDetailMember(row.nama)}
+                          >
+                            <List className="size-3.5" />
+                            <span className="hidden sm:inline">Detail</span>
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -255,46 +373,13 @@ export function WeeklyProfitPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border/60 bg-card/80">
-            <CardHeader>
-              <CardTitle className="text-base">Detail Baris Order</CardTitle>
-              <CardDescription>{report.lines.length} baris</CardDescription>
-            </CardHeader>
-            <CardContent className="px-0 pb-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Member</TableHead>
-                    <TableHead>Item</TableHead>
-                    <TableHead className="text-center">Qty</TableHead>
-                    <TableHead className="text-right">Harga jual</TableHead>
-                    <TableHead className="text-right">Harga asli</TableHead>
-                    <TableHead className="text-right">Untung</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {report.lines.map((line) => (
-                    <TableRow key={line.id}>
-                      <TableCell>{line.nama}</TableCell>
-                      <TableCell className="font-medium">{line.item}</TableCell>
-                      <TableCell className="text-center text-muted-foreground">
-                        {line.qty}
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">
-                        {fmtUsd(line.hargaJual)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">
-                        {fmtUsd(line.hargaAsli)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">
-                        {fmtUsd(line.untung)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          {detailMember ? (
+            <MemberOrderDetailDialog
+              member={detailMember}
+              lines={detailLines}
+              onClose={() => setDetailMember(null)}
+            />
+          ) : null}
         </>
       ) : null}
 
