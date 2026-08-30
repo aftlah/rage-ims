@@ -125,7 +125,13 @@ export function LoginPage() {
         </section>
 
         <section className="login-modern-panel">
-          <div className="login-mobile-shell">
+          <div className="login-desktop-panel-bg" aria-hidden />
+          <div className="login-mobile-shell login-desktop-shell">
+            <p className="login-desktop-kicker">
+              <ShieldCheck className="size-3.5" strokeWidth={2} aria-hidden />
+              {t('login.encryptedAccess')}
+            </p>
+
             <div className="login-auth-card login-glass-card login-glass-card--clean">
               <div className="login-auth-mobile-top">
                 <div className="login-auth-mobile-brand">
@@ -242,6 +248,26 @@ export function LoginPage() {
                 <ShieldCheck className="size-3.5" strokeWidth={2} aria-hidden />
                 {t('login.footer')}
               </p>
+            </div>
+
+            <div className="login-desktop-modules">
+              {featureKeys.map((item, i) => {
+                const Icon = item.icon
+                return (
+                  <div
+                    key={item.key}
+                    className="login-desktop-module"
+                    style={{ animationDelay: `${0.35 + i * 0.06}s` }}
+                  >
+                    <span className="login-desktop-module__icon">
+                      <Icon className="size-3.5" strokeWidth={1.75} />
+                    </span>
+                    <span className="login-desktop-module__label">
+                      {t(`login.features.${item.key}.label`)}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </section>
