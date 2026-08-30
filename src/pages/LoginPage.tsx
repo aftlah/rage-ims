@@ -16,10 +16,10 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 
 const features = [
-  { label: 'Order', desc: 'Mingguan & batch', icon: ClipboardList },
-  { label: 'Rekap', desc: 'Ringkas crew', icon: BarChart3 },
-  { label: 'Storan', desc: 'Tracking saldo', icon: Package },
-  { label: 'Profit', desc: 'Laporan minggu', icon: TrendingUp },
+  { label: 'Order', desc: 'Period management', icon: ClipboardList },
+  { label: 'Rekap', desc: 'Operations summary', icon: BarChart3 },
+  { label: 'Storan', desc: 'Balance tracking', icon: Package },
+  { label: 'Profit', desc: 'Financial reports', icon: TrendingUp },
 ] as const
 
 export function LoginPage() {
@@ -52,6 +52,7 @@ export function LoginPage() {
       <div className="login-mesh login-mesh--secondary" aria-hidden />
       <div className="login-grid-overlay" aria-hidden />
       <div className="login-noise" aria-hidden />
+      <div className="login-vignette login-vignette--page" aria-hidden />
 
       <div className="login-orbs" aria-hidden>
         <span className="login-orb login-orb--gold" />
@@ -63,7 +64,9 @@ export function LoginPage() {
         <section className="login-modern-brand">
           <div className="login-brand-inner">
             <div className="login-logo-wrap">
+              <span className="login-logo-ring login-logo-ring--outer" aria-hidden />
               <span className="login-logo-ring" aria-hidden />
+              <span className="login-logo-glow" aria-hidden />
               <img
                 src="/logo_rage.png"
                 alt=""
@@ -78,12 +81,12 @@ export function LoginPage() {
 
             <h1 className="login-brand-headline">
               <span className="text-gradient-gold">R.A.G.E</span>
-              <span>Order System</span>
+              <span>Management System</span>
             </h1>
 
             <p className="login-brand-copy">
-              Kelola order mingguan, rekap crew, storan, dan laporan profit —
-              semua dalam satu dashboard terpusat.
+              A centralized platform for operations, summaries, deposits,
+              catalog, and member financial reporting.
             </p>
 
             <div className="login-bento">
@@ -106,37 +109,49 @@ export function LoginPage() {
                 )
               })}
             </div>
+
+            <div className="login-brand-stats">
+              <span>Integrated modules</span>
+              <span className="login-brand-stats__dot" aria-hidden />
+              <span>Data sync</span>
+              <span className="login-brand-stats__dot" aria-hidden />
+              <span>Member access</span>
+            </div>
           </div>
         </section>
 
         <section className="login-modern-panel">
           <div className="login-mobile-hero lg:hidden">
             <div className="login-logo-wrap login-logo-wrap--sm">
+              <span className="login-logo-ring login-logo-ring--outer" aria-hidden />
               <span className="login-logo-ring" aria-hidden />
+              <span className="login-logo-glow" aria-hidden />
               <img src="/logo_rage.png" alt="" />
             </div>
             <h1 className="login-mobile-title">
               <span className="text-gradient-gold">R.A.G.E</span>
-              <span> Order System</span>
+              <span className="login-mobile-title__sub">Management System</span>
             </h1>
-            <p className="login-mobile-tagline">
-              Dashboard internal untuk member authorized
-            </p>
           </div>
 
           <div className="login-glass-card">
+            <div className="login-glass-card__border" aria-hidden />
             <div className="login-glass-card__glow" aria-hidden />
             <div className="login-glass-card__shine" aria-hidden />
 
             <div className="login-panel-header">
               <span className="login-secure-badge">
                 <ShieldCheck className="size-3.5" strokeWidth={2} />
-                Secure login
+                Encrypted access
               </span>
-              <h2 className="login-panel-title">Selamat datang</h2>
+              <h2 className="login-panel-title">Welcome</h2>
               <p className="login-panel-subtitle">
-                Masuk dengan username & password member
+                Sign in with your member username and password
               </p>
+            </div>
+
+            <div className="login-panel-divider" aria-hidden>
+              <span />
             </div>
 
             <form onSubmit={handleSubmit} className="login-form">
@@ -153,7 +168,7 @@ export function LoginPage() {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="leo, evan, …"
+                    placeholder="Enter username"
                     className="login-input-modern"
                   />
                 </div>
@@ -172,7 +187,7 @@ export function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Masukkan password"
+                    placeholder="Enter password"
                     className="login-input-modern login-input-modern--password"
                   />
                   <button
@@ -180,9 +195,7 @@ export function LoginPage() {
                     className="login-input-group__action"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={
-                      showPassword
-                        ? 'Sembunyikan password'
-                        : 'Tampilkan password'
+                      showPassword ? 'Hide password' : 'Show password'
                     }
                   >
                     {showPassword ? (
@@ -200,7 +213,7 @@ export function LoginPage() {
                 className="login-btn-modern login-stagger-3"
               >
                 <span className="login-btn-modern__shine" aria-hidden />
-                <span>{submitting ? 'Memproses…' : 'Masuk ke dashboard'}</span>
+                <span>{submitting ? 'Signing in…' : 'Sign in'}</span>
                 {!submitting ? (
                   <ArrowRight className="size-4 shrink-0" strokeWidth={2} />
                 ) : null}
@@ -208,7 +221,7 @@ export function LoginPage() {
             </form>
 
             <p className="login-panel-footer">
-              Authorized members only · R.A.G.E
+              Registered members only · R.A.G.E
             </p>
           </div>
         </section>

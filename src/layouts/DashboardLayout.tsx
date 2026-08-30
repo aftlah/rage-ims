@@ -124,7 +124,7 @@ function SidebarNav({
         <p className="text-gradient-gold text-sm font-extrabold tracking-[0.12em]">
           R.A.G.E
         </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">Order System</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">Management System</p>
       </div>
 
       <nav className="flex flex-1 flex-col gap-5 overflow-y-auto p-3">
