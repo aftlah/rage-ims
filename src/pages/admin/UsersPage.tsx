@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Trash2 } from 'lucide-react'
 import { PageHeader, PageStack } from '@/components/layout/PageHeader'
+import { ConfirmMemberDeleteDialog } from '@/components/ConfirmMemberDeleteDialog'
 import {
   EmptyState,
   ErrorState,
@@ -37,6 +38,7 @@ import { useToast } from '@/contexts/ToastContext'
 import {
   fetchAccountAuditLogs,
   fetchAdminMembers,
+  deleteMemberViaAdmin,
   MEMBER_ROLES,
   patchMemberProfileViaRpc,
   updateMemberRole,
@@ -45,7 +47,7 @@ import {
 } from '@/lib/adminUsers'
 
 export function UsersPage() {
-  const { user, isAdmin } = useAuth()
+  const { user, member, isAdmin } = useAuth()
   const toast = useToast()
   const [members, setMembers] = useState<AdminMember[]>([])
   const [audit, setAudit] = useState<AuditRow[]>([])
@@ -56,6 +58,16 @@ export function UsersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+
+  const isSelfSelected = useMemo(() => {
+    if (!selected) return false
+    if (member?.id && selected.id === member.id) return true
+    if (user?.id && selected.auth_user_id && user.id === selected.auth_user_id) {
+      return true
+    }
+    return false
+  }, [member?.id, selected, user?.id])
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -131,6 +143,25 @@ export function UsersPage() {
         ? { ...prev, email: res.email }
         : prev,
     )
+  }
+
+  async function handleDeleteMember() {
+    if (!selected || isSelfSelected) return
+    setBusy(true)
+    const res = await deleteMemberViaAdmin({
+      memberId: selected.id,
+      targetAuthUserId: selected.auth_user_id,
+      actorAuthUserId: user?.id ?? null,
+      memberName: selected.nama,
+    })
+    setBusy(false)
+    if (!res.ok) {
+      toast.error(res.error)
+      throw new Error(res.error)
+    }
+    toast.success(`Member ${selected.nama} dihapus`)
+    setSelected(null)
+    await refresh()
   }
 
   if (!isAdmin) return null
@@ -310,6 +341,32 @@ export function UsersPage() {
 
           <Card className="border-border/60 bg-card/80">
             <CardHeader>
+              <CardTitle>Hapus Member</CardTitle>
+              <CardDescription>
+                Menghapus member beserta semua data terkait (order, storan,
+                absen, drugs, nitip cuci) dan akun login. Wajib konfirmasi nama
+                + PIN hapus.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {isSelfSelected ? (
+                <p className="text-sm text-muted-foreground">
+                  Kamu tidak bisa menghapus akun sendiri.
+                </p>
+              ) : null}
+              <Button
+                variant="destructive"
+                disabled={!selected || busy || isSelfSelected}
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="size-4" />
+                Hapus Member
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 bg-card/80">
+            <CardHeader>
               <CardTitle>Audit Trail</CardTitle>
               <CardDescription>Riwayat aksi admin terbaru</CardDescription>
             </CardHeader>
@@ -354,6 +411,13 @@ export function UsersPage() {
           </Card>
         </div>
       </div>
+
+      <ConfirmMemberDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        memberName={selected?.nama || ''}
+        onConfirm={handleDeleteMember}
+      />
     </PageStack>
   )
 }

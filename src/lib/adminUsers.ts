@@ -1,5 +1,5 @@
 import { AUTH_EMAIL_DOMAIN } from './constants'
-import { syncAuthUserEmail } from './adminAuthSync'
+import { deleteAuthUserViaEdge, syncAuthUserEmail } from './adminAuthSync'
 import { rpcAdminInsertAuditLog, rpcAdminPatchMember } from './adminRpc'
 import { supabase } from './supabase'
 
@@ -155,4 +155,47 @@ export async function patchMemberProfileViaRpc(args: {
   })
 
   return { ok: true, email: nextEmail }
+}
+
+/**
+ * Admin-only: remove member row + Supabase Auth login via Edge Function.
+ */
+export async function deleteMemberViaAdmin(args: {
+  memberId: number
+  targetAuthUserId: string | null
+  actorAuthUserId: string | null
+  memberName: string
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const memberId = Number(args.memberId)
+  if (!memberId) {
+    return { ok: false, error: 'Member tidak valid' }
+  }
+
+  if (
+    args.actorAuthUserId &&
+    args.targetAuthUserId &&
+    args.actorAuthUserId === args.targetAuthUserId
+  ) {
+    return { ok: false, error: 'Tidak bisa menghapus akun sendiri' }
+  }
+
+  const deleteRes = await deleteAuthUserViaEdge({
+    memberId,
+    targetAuthUserId: args.targetAuthUserId,
+  })
+
+  if (!deleteRes.ok) return deleteRes
+
+  await rpcAdminInsertAuditLog({
+    action: 'delete_member',
+    actor_auth_user_id: args.actorAuthUserId,
+    target_auth_user_id: args.targetAuthUserId,
+    target_member_id: memberId,
+    meta: {
+      nama: args.memberName || deleteRes.nama,
+      deleted_auth_user_id: deleteRes.deletedAuthUserId,
+    },
+  })
+
+  return { ok: true }
 }
