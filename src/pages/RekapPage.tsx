@@ -49,7 +49,11 @@ import {
 } from '@/lib/discordShares'
 import { fmtUsd } from '@/lib/format'
 import { formatOrderankeLabel } from '@/lib/orderWindow'
-import type { DeliveredFilter, OrderGroup, OrderRow } from '@/lib/rekapOrders'
+import {
+  type DeliveredFilter,
+  type OrderGroup,
+  type OrderRow,
+} from '@/lib/rekapOrders'
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 const WEEKS = Array.from({ length: 5 }, (_, i) => i + 1)
@@ -67,6 +71,7 @@ function RekapOrderTable({
   memberNama,
   onDetail,
   onTogglePaid,
+  onToggleScrapGiven,
 }: {
   groups: OrderGroup[]
   isAdmin: boolean
@@ -74,18 +79,19 @@ function RekapOrderTable({
   memberNama?: string
   onDetail: (group: OrderGroup) => void
   onTogglePaid: (row: OrderRow, actor?: string) => void | Promise<void>
+  onToggleScrapGiven: (row: OrderRow) => void | Promise<void>
 }) {
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Order</TableHead>
           <TableHead>Nama</TableHead>
           <TableHead className="hidden md:table-cell">Waktu</TableHead>
           <TableHead className="text-center">Item</TableHead>
           <TableHead className="text-center">Qty</TableHead>
           <TableHead className="text-right">Total</TableHead>
           <TableHead className="text-center">Delivered</TableHead>
+          <TableHead className="text-center">Metal Scrap</TableHead>
           <TableHead className="text-center">Bayar</TableHead>
           <TableHead className="text-right">Detail</TableHead>
         </TableRow>
@@ -93,9 +99,6 @@ function RekapOrderTable({
       <TableBody>
         {groups.map((group) => (
           <TableRow key={group.key}>
-            <TableCell className="font-mono text-xs text-muted-foreground">
-              {group.order_no || group.order_id || '—'}
-            </TableCell>
             <TableCell className="font-medium">{group.nama}</TableCell>
             <TableCell className="hidden text-muted-foreground md:table-cell">
               {group.waktu ? new Date(group.waktu).toLocaleString() : '—'}
@@ -121,6 +124,28 @@ function RekapOrderTable({
               >
                 {deliveredLabel(group)}
               </Badge>
+            </TableCell>
+            <TableCell className="text-center">
+              {group.periodScrapTotal === 0 ? (
+                <span className="text-muted-foreground">—</span>
+              ) : isAdmin ? (
+                <Button
+                  variant={group.periodScrapGiven ? 'default' : 'outline'}
+                  size="sm"
+                  disabled={group.lines.some((l) => busyId === l.id)}
+                  title={`${group.periodScrapTotal} scrap periode`}
+                  onClick={() => void onToggleScrapGiven(group.lines[0])}
+                >
+                  {group.periodScrapGiven ? 'Sudah' : 'Belum'}
+                </Button>
+              ) : (
+                <Badge
+                  variant={group.periodScrapGiven ? 'default' : 'secondary'}
+                  title={`${group.periodScrapTotal} scrap periode`}
+                >
+                  {group.periodScrapGiven ? 'Sudah' : 'Belum'}
+                </Badge>
+              )}
             </TableCell>
             <TableCell className="text-center">
               {isAdmin ? (
@@ -277,6 +302,7 @@ export function RekapPage() {
     refresh,
     toggleDelivered,
     togglePaid,
+    toggleScrapGiven,
     archiveRow,
   } = useRekapOrders({
     isAdmin,
@@ -443,7 +469,7 @@ export function RekapPage() {
           </div>
           <p className="mt-3 text-[11px] text-muted-foreground">
             {isAdmin
-              ? 'Mode admin: delivered per item di detail · bayar per periode member.'
+              ? 'Mode admin: delivered per item di detail · bayar & metal scrap per periode member.'
               : 'Mode member: menampilkan order milikmu saja.'}
           </p>
         </CardContent>
@@ -508,6 +534,7 @@ export function RekapPage() {
                   memberNama={member?.nama || undefined}
                   onDetail={setDetailGroup}
                   onTogglePaid={togglePaid}
+                  onToggleScrapGiven={toggleScrapGiven}
                 />
               </CardContent>
             </Card>

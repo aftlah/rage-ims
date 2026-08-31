@@ -41,6 +41,8 @@ export type OrderGroup = {
   deliveredCount: number
   allDelivered: boolean
   paid: boolean
+  periodScrapTotal: number
+  periodScrapGiven: boolean
 }
 
 export type OrderPeriodSection = {
@@ -227,6 +229,8 @@ export function groupOrdersBySubmission(rows: OrderRow[]): OrderGroup[] {
         deliveredCount: 0,
         allDelivered: true,
         paid: row.paid,
+        periodScrapTotal: 0,
+        periodScrapGiven: false,
       }
       map.set(key, group)
     }
@@ -245,6 +249,42 @@ export function groupOrdersBySubmission(rows: OrderRow[]): OrderGroup[] {
       new Date(b.waktu).getTime() - new Date(a.waktu).getTime() ||
       a.nama.localeCompare(b.nama),
   )
+}
+
+/** Attach metal-scrap stats per member+periode to grouped orders. */
+export function enrichOrderGroupsWithScrap(
+  groups: OrderGroup[],
+  catalog: CatalogByCategory,
+): OrderGroup[] {
+  const periodMap = new Map<
+    string,
+    { totalScrap: number; scrapGiven: boolean }
+  >()
+
+  for (const group of groups) {
+    const key = `${group.nama}|${group.orderanke}`
+    let entry = periodMap.get(key)
+    if (!entry) {
+      entry = {
+        totalScrap: 0,
+        scrapGiven: Boolean(group.lines[0]?.scrap_given),
+      }
+      periodMap.set(key, entry)
+    }
+    for (const line of group.lines) {
+      entry.totalScrap +=
+        getCatalogScrap(line.item, catalog) * (line.qty || 0)
+    }
+  }
+
+  return groups.map((group) => {
+    const entry = periodMap.get(`${group.nama}|${group.orderanke}`)!
+    return {
+      ...group,
+      periodScrapTotal: entry.totalScrap,
+      periodScrapGiven: entry.totalScrap > 0 && entry.scrapGiven,
+    }
+  })
 }
 
 /** Group order summaries into sections by periode (orderanke). */
@@ -333,6 +373,50 @@ export async function updateOrderDelivered(
     .eq('id', id)
   if (error) return { ok: false, error: error.message }
   return { ok: true }
+}
+
+/** Toggle metal scrap given for all rows of a person in a periode. */
+export async function updatePersonOrderScrapGiven(args: {
+  nama: string
+  orderanke: number
+  scrapGiven: boolean
+}): Promise<
+  { ok: true; scrapTotal: number } | { ok: false; error: string }
+> {
+  const nama = String(args.nama || '').trim()
+  const orderanke = Number(args.orderanke) || 0
+  if (!nama || !orderanke) {
+    return { ok: false, error: 'Nama / periode tidak valid' }
+  }
+
+  let q = supabase
+    .from('orders')
+    .update({ scrap_given: !!args.scrapGiven })
+    .eq('nama', nama)
+    .eq('orderanke', orderanke)
+    .is('deleted_at', null)
+    .select('id,qty,item')
+
+  let { data, error } = await q
+  if (error && isMissingColumnError(error, 'deleted_at')) {
+    ;({ data, error } = await supabase
+      .from('orders')
+      .update({ scrap_given: !!args.scrapGiven })
+      .eq('nama', nama)
+      .eq('orderanke', orderanke)
+      .select('id,qty,item'))
+  }
+  if (error) {
+    if (String(error.message || '').includes('scrap_given')) {
+      return { ok: false, error: "Kolom 'scrap_given' belum ada di orders" }
+    }
+    return { ok: false, error: error.message }
+  }
+  if (!data?.length) {
+    return { ok: false, error: 'Tidak ada baris order yang diubah' }
+  }
+
+  return { ok: true, scrapTotal: data.length }
 }
 
 /** Toggle paid for all active rows of a person in a periode (+ Discord log). */

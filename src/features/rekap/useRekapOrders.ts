@@ -10,12 +10,14 @@ import {
   applyClientFilters,
   archiveOrderById,
   fetchOrdersForDashboard,
+  enrichOrderGroupsWithScrap,
   groupOrdersByBatch,
   groupOrdersBySubmission,
   groupOrderGroupsByPeriod,
   summarizeByUser,
   summarizeFiltered,
   updateOrderDelivered,
+  updatePersonOrderScrapGiven,
   updatePersonOrderPaid,
   type DeliveredFilter,
   type OrderRow,
@@ -119,8 +121,8 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
   )
   const batches = useMemo(() => groupOrdersByBatch(filtered), [filtered])
   const orderGroups = useMemo(
-    () => groupOrdersBySubmission(filtered),
-    [filtered],
+    () => enrichOrderGroupsWithScrap(groupOrdersBySubmission(filtered), catalog),
+    [catalog, filtered],
   )
   const orderPeriodSections = useMemo(
     () => groupOrderGroupsByPeriod(orderGroups),
@@ -174,6 +176,33 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
     [isAdmin, toast],
   )
 
+  const toggleScrapGiven = useCallback(
+    async (row: OrderRow) => {
+      if (!isAdmin) return
+      setBusyId(row.id)
+      const next = !row.scrap_given
+      const result = await updatePersonOrderScrapGiven({
+        nama: row.nama,
+        orderanke: row.orderanke,
+        scrapGiven: next,
+      })
+      setBusyId(null)
+      if (!result.ok) {
+        toast.error(result.error)
+        return
+      }
+      setRows((prev) =>
+        prev.map((r) =>
+          r.nama === row.nama && r.orderanke === row.orderanke
+            ? { ...r, scrap_given: next }
+            : r,
+        ),
+      )
+      toast.success(next ? 'Metal scrap: Sudah' : 'Metal scrap: Belum')
+    },
+    [isAdmin, toast],
+  )
+
   const archiveRow = useCallback(
     async (row: OrderRow) => {
       if (!isAdmin) return
@@ -218,6 +247,7 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
     refresh,
     toggleDelivered,
     togglePaid,
+    toggleScrapGiven,
     archiveRow,
   }
 }
