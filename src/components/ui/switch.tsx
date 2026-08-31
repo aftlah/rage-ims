@@ -22,6 +22,7 @@ function Switch({
         "data-[size=sm]:h-5 data-[size=sm]:w-9",
         "data-[state=checked]:border-emerald-400 data-[state=checked]:bg-emerald-500 data-[state=checked]:shadow-[0_0_0_1px_rgba(52,211,153,0.45),0_0_16px_rgba(52,211,153,0.35)]",
         "data-[state=unchecked]:border-zinc-500/70 data-[state=unchecked]:bg-zinc-800",
+        "enabled:hover:brightness-110 enabled:hover:shadow-[0_0_10px_rgba(52,211,153,0.2)]",
         "data-disabled:cursor-not-allowed data-disabled:opacity-50",
         className
       )}

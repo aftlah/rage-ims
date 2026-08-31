@@ -93,10 +93,10 @@ const pageTitleKeys: Record<string, string> = {
 
 function navClassName({ isActive }: { isActive: boolean }) {
   return [
-    'flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+    'flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150',
     isActive
       ? 'bg-primary/15 text-primary'
-      : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+      : 'text-muted-foreground hover:bg-accent/80 hover:text-foreground',
   ]
     .filter(Boolean)
     .join(' ')
@@ -259,7 +259,7 @@ export function DashboardLayout() {
 
           <NavLink
             to="/profile"
-            className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-primary/15 text-xs font-bold text-primary transition-colors hover:bg-primary/25 md:hidden"
+            className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-border/60 bg-primary/15 text-xs font-bold text-primary transition-all duration-150 hover:border-primary/35 hover:bg-primary/25 md:hidden"
             title={t('layout.openProfile')}
             aria-label={t('layout.profileAria', {
               name: member?.nama || '',
@@ -270,7 +270,7 @@ export function DashboardLayout() {
 
           <NavLink
             to="/profile"
-            className="hidden min-w-0 items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 transition-colors hover:bg-muted/60 md:flex md:max-w-60"
+            className="hidden min-w-0 cursor-pointer items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 transition-all duration-150 hover:border-primary/30 hover:bg-muted/70 md:flex md:max-w-60"
             title={t('layout.openProfile')}
           >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary">

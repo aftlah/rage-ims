@@ -2358,3 +2358,38 @@ body {
   background: rgba(245, 200, 66, 0.25);
   color: var(--color-rage-text);
 }
+
+/* ── App-wide clickable affordance ── */
+.app-shell :is(
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [data-slot="button"]:not(:disabled),
+  [data-slot="select-trigger"]:not(:disabled),
+  [data-slot="select-item"]:not([data-disabled]),
+  [data-slot="tabs-trigger"]:not(:disabled),
+  [data-slot="checkbox"]:not(:disabled),
+  [data-slot="switch"]:not(:disabled),
+  [data-slot="dropdown-menu-item"]:not([data-disabled]),
+  [data-slot="dialog-close"],
+  [data-slot="sheet-close"],
+  a[href]
+) {
+  cursor: pointer;
+}
+
+.app-shell :is(button:disabled, [aria-disabled="true"], [data-disabled]) {
+  cursor: not-allowed;
+}
+
+.app-shell button:not(:disabled):not([data-slot="button"]):hover {
+  filter: brightness(1.06);
+}
+
+.app-shell [data-slot="dropdown-menu-item"]:not([data-disabled]):hover {
+  background: color-mix(in oklab, var(--accent) 85%, transparent);
+}
+
+.app-shell label[for]:has(+ input:not(:disabled)),
+.app-shell label[for]:has(+ textarea:not(:disabled)) {
+  cursor: pointer;
+}

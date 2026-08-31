@@ -36,10 +36,10 @@ export function LanguageSwitcher({
           type="button"
           onClick={() => setLocale(locale)}
           className={[
-            'rounded-md px-2.5 py-1.5 text-[11px] font-bold tracking-wide uppercase transition-colors min-h-[2rem] min-w-[2.25rem]',
+            'rounded-md px-2.5 py-1.5 text-[11px] font-bold tracking-wide uppercase transition-all duration-150 min-h-[2rem] min-w-[2.25rem] cursor-pointer',
             current === locale
               ? 'bg-primary/15 text-primary'
-              : 'text-muted-foreground hover:text-foreground',
+              : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
           ].join(' ')}
           aria-pressed={current === locale}
         >
