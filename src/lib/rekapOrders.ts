@@ -43,6 +43,15 @@ export type OrderGroup = {
   paid: boolean
 }
 
+export type OrderPeriodSection = {
+  orderanke: number
+  groups: OrderGroup[]
+  orderCount: number
+  lineCount: number
+  qty: number
+  total: number
+}
+
 export type DeliveredFilter = 'all' | 'delivered' | 'pending'
 
 const FULL_COLS =
@@ -236,6 +245,30 @@ export function groupOrdersBySubmission(rows: OrderRow[]): OrderGroup[] {
       new Date(b.waktu).getTime() - new Date(a.waktu).getTime() ||
       a.nama.localeCompare(b.nama),
   )
+}
+
+/** Group order summaries into sections by periode (orderanke). */
+export function groupOrderGroupsByPeriod(
+  groups: OrderGroup[],
+): OrderPeriodSection[] {
+  const map = new Map<number, OrderGroup[]>()
+
+  for (const group of groups) {
+    const list = map.get(group.orderanke) || []
+    list.push(group)
+    map.set(group.orderanke, list)
+  }
+
+  return Array.from(map.entries())
+    .sort((a, b) => b[0] - a[0])
+    .map(([orderanke, periodGroups]) => ({
+      orderanke,
+      groups: periodGroups,
+      orderCount: periodGroups.length,
+      lineCount: periodGroups.reduce((sum, g) => sum + g.lineCount, 0),
+      qty: periodGroups.reduce((sum, g) => sum + g.qty, 0),
+      total: periodGroups.reduce((sum, g) => sum + g.total, 0),
+    }))
 }
 
 export type UserTotal = {

@@ -12,6 +12,7 @@ import {
   fetchOrdersForDashboard,
   groupOrdersByBatch,
   groupOrdersBySubmission,
+  groupOrderGroupsByPeriod,
   summarizeByUser,
   summarizeFiltered,
   updateOrderDelivered,
@@ -121,6 +122,10 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
     () => groupOrdersBySubmission(filtered),
     [filtered],
   )
+  const orderPeriodSections = useMemo(
+    () => groupOrderGroupsByPeriod(orderGroups),
+    [orderGroups],
+  )
 
   const toggleDelivered = useCallback(
     async (row: OrderRow) => {
@@ -209,6 +214,7 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
     byUser,
     batches,
     orderGroups,
+    orderPeriodSections,
     refresh,
     toggleDelivered,
     togglePaid,

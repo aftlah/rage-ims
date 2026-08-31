@@ -60,6 +60,103 @@ function deliveredLabel(group: OrderGroup): string {
   return `${group.deliveredCount}/${group.lineCount}`
 }
 
+function RekapOrderTable({
+  groups,
+  isAdmin,
+  busyId,
+  memberNama,
+  onDetail,
+  onTogglePaid,
+}: {
+  groups: OrderGroup[]
+  isAdmin: boolean
+  busyId: number | null
+  memberNama?: string
+  onDetail: (group: OrderGroup) => void
+  onTogglePaid: (row: OrderRow, actor?: string) => void | Promise<void>
+}) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Order</TableHead>
+          <TableHead>Nama</TableHead>
+          <TableHead className="hidden md:table-cell">Waktu</TableHead>
+          <TableHead className="text-center">Item</TableHead>
+          <TableHead className="text-center">Qty</TableHead>
+          <TableHead className="text-right">Total</TableHead>
+          <TableHead className="text-center">Delivered</TableHead>
+          <TableHead className="text-center">Bayar</TableHead>
+          <TableHead className="text-right">Detail</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {groups.map((group) => (
+          <TableRow key={group.key}>
+            <TableCell className="font-mono text-xs text-muted-foreground">
+              {group.order_no || group.order_id || '—'}
+            </TableCell>
+            <TableCell className="font-medium">{group.nama}</TableCell>
+            <TableCell className="hidden text-muted-foreground md:table-cell">
+              {group.waktu ? new Date(group.waktu).toLocaleString() : '—'}
+            </TableCell>
+            <TableCell className="text-center text-muted-foreground">
+              {group.lineCount}
+            </TableCell>
+            <TableCell className="text-center text-muted-foreground">
+              {group.qty}
+            </TableCell>
+            <TableCell className="text-right font-mono tabular-nums">
+              {fmtUsd(group.total)}
+            </TableCell>
+            <TableCell className="text-center">
+              <Badge
+                variant={
+                  group.allDelivered
+                    ? 'default'
+                    : group.deliveredCount > 0
+                      ? 'outline'
+                      : 'secondary'
+                }
+              >
+                {deliveredLabel(group)}
+              </Badge>
+            </TableCell>
+            <TableCell className="text-center">
+              {isAdmin ? (
+                <Button
+                  variant={group.paid ? 'default' : 'outline'}
+                  size="sm"
+                  disabled={group.lines.some((l) => busyId === l.id)}
+                  onClick={() =>
+                    void onTogglePaid(group.lines[0], memberNama)
+                  }
+                >
+                  {group.paid ? 'Lunas' : 'Belum'}
+                </Button>
+              ) : (
+                <Badge variant={group.paid ? 'default' : 'secondary'}>
+                  {group.paid ? 'Lunas' : 'Belum'}
+                </Badge>
+              )}
+            </TableCell>
+            <TableCell className="text-right">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onDetail(group)}
+              >
+                <Eye className="size-4" />
+                <span className="hidden sm:inline">Detail</span>
+              </Button>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  )
+}
+
 function RekapOrderDetailDialog({
   group,
   isAdmin,
@@ -176,6 +273,7 @@ export function RekapPage() {
     filtered,
     stats,
     orderGroups,
+    orderPeriodSections,
     refresh,
     toggleDelivered,
     togglePaid,
@@ -381,109 +479,40 @@ export function RekapPage() {
       {loading ? <LoadingState message="Memuat rekap…" /> : null}
 
       {!loading ? (
-        <Card className="border-border/60 bg-card/80">
-          <CardHeader>
-            <CardTitle className="text-primary">Daftar Order</CardTitle>
-            <CardDescription>
-              {orderGroups.length} order · {stats.lineCount} baris item
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            {orderGroups.length === 0 ? (
+        orderPeriodSections.length === 0 ? (
+          <Card className="border-border/60 bg-card/80">
+            <CardContent className="py-8">
               <EmptyState title="Tidak ada data" />
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Periode</TableHead>
-                    <TableHead>Order</TableHead>
-                    <TableHead>Nama</TableHead>
-                    <TableHead className="hidden md:table-cell">Waktu</TableHead>
-                    <TableHead className="text-center">Item</TableHead>
-                    <TableHead className="text-center">Qty</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-center">Delivered</TableHead>
-                    <TableHead className="text-center">Bayar</TableHead>
-                    <TableHead className="text-right">Detail</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {orderGroups.map((group) => (
-                    <TableRow key={group.key}>
-                      <TableCell className="whitespace-nowrap text-muted-foreground">
-                        {formatOrderankeLabel(group.orderanke)}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {group.order_no || group.order_id || '—'}
-                      </TableCell>
-                      <TableCell className="font-medium">{group.nama}</TableCell>
-                      <TableCell className="hidden text-muted-foreground md:table-cell">
-                        {group.waktu
-                          ? new Date(group.waktu).toLocaleString()
-                          : '—'}
-                      </TableCell>
-                      <TableCell className="text-center text-muted-foreground">
-                        {group.lineCount}
-                      </TableCell>
-                      <TableCell className="text-center text-muted-foreground">
-                        {group.qty}
-                      </TableCell>
-                      <TableCell className="text-right font-mono tabular-nums">
-                        {fmtUsd(group.total)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge
-                          variant={
-                            group.allDelivered
-                              ? 'default'
-                              : group.deliveredCount > 0
-                                ? 'outline'
-                                : 'secondary'
-                          }
-                        >
-                          {deliveredLabel(group)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {isAdmin ? (
-                          <Button
-                            variant={group.paid ? 'default' : 'outline'}
-                            size="sm"
-                            disabled={group.lines.some((l) => busyId === l.id)}
-                            onClick={() =>
-                              void togglePaid(
-                                group.lines[0],
-                                member?.nama || undefined,
-                              )
-                            }
-                          >
-                            {group.paid ? 'Lunas' : 'Belum'}
-                          </Button>
-                        ) : (
-                          <Badge
-                            variant={group.paid ? 'default' : 'secondary'}
-                          >
-                            {group.paid ? 'Lunas' : 'Belum'}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setDetailGroup(group)}
-                        >
-                          <Eye className="size-4" />
-                          <span className="hidden sm:inline">Detail</span>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          orderPeriodSections.map((section) => (
+            <Card
+              key={section.orderanke}
+              className="border-border/60 bg-card/80"
+            >
+              <CardHeader className="pb-3">
+                <CardTitle className="text-primary">
+                  {formatOrderankeLabel(section.orderanke)}
+                </CardTitle>
+                <CardDescription>
+                  {section.orderCount} order · {section.lineCount} baris · qty{' '}
+                  {section.qty} · {fmtUsd(section.total)}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="px-4 pb-4">
+                <RekapOrderTable
+                  groups={section.groups}
+                  isAdmin={isAdmin}
+                  busyId={busyId}
+                  memberNama={member?.nama || undefined}
+                  onDetail={setDetailGroup}
+                  onTogglePaid={togglePaid}
+                />
+              </CardContent>
+            </Card>
+          ))
+        )
       ) : null}
 
       {liveDetailGroup ? (
