@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Megaphone, RefreshCw, Send } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Eye, Megaphone, RefreshCw, Send } from 'lucide-react'
 import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import { ConfirmDeleteDialog } from '@/components/ConfirmDeleteDialog'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -42,10 +49,112 @@ import {
 } from '@/lib/discordShares'
 import { fmtUsd } from '@/lib/format'
 import { formatOrderankeLabel } from '@/lib/orderWindow'
-import type { DeliveredFilter, OrderRow } from '@/lib/rekapOrders'
+import type { DeliveredFilter, OrderGroup, OrderRow } from '@/lib/rekapOrders'
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 const WEEKS = Array.from({ length: 5 }, (_, i) => i + 1)
+
+function deliveredLabel(group: OrderGroup): string {
+  if (group.allDelivered) return 'Sudah'
+  if (group.deliveredCount === 0) return 'Belum'
+  return `${group.deliveredCount}/${group.lineCount}`
+}
+
+function RekapOrderDetailDialog({
+  group,
+  isAdmin,
+  busyId,
+  onClose,
+  onToggleDelivered,
+  onArchive,
+}: {
+  group: OrderGroup
+  isAdmin: boolean
+  busyId: number | null
+  onClose: () => void
+  onToggleDelivered: (row: OrderRow) => void | Promise<void>
+  onArchive: (row: OrderRow) => void
+}) {
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Detail Order — {group.nama}</DialogTitle>
+          <DialogDescription>
+            {formatOrderankeLabel(group.orderanke)} ·{' '}
+            {group.order_no || group.order_id || '—'} · {group.lineCount} item ·{' '}
+            {fmtUsd(group.total)}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Item</TableHead>
+              <TableHead className="text-center">Qty</TableHead>
+              <TableHead className="text-right">Subtotal</TableHead>
+              <TableHead className="text-center">Delivered</TableHead>
+              {isAdmin ? (
+                <TableHead className="text-right">Aksi</TableHead>
+              ) : null}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {group.lines.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell className="font-medium">{row.item}</TableCell>
+                <TableCell className="text-center text-muted-foreground">
+                  {row.qty}
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {fmtUsd(row.subtotal)}
+                </TableCell>
+                <TableCell className="text-center">
+                  {isAdmin ? (
+                    <Button
+                      variant={row.delivered ? 'default' : 'secondary'}
+                      size="sm"
+                      disabled={busyId === row.id}
+                      onClick={() => void onToggleDelivered(row)}
+                    >
+                      {row.delivered ? 'Sudah' : 'Belum'}
+                    </Button>
+                  ) : (
+                    <Badge variant={row.delivered ? 'default' : 'secondary'}>
+                      {row.delivered ? 'Sudah' : 'Belum'}
+                    </Badge>
+                  )}
+                </TableCell>
+                {isAdmin ? (
+                  <TableCell className="text-right">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={busyId === row.id}
+                      onClick={() => onArchive(row)}
+                    >
+                      Arsip
+                    </Button>
+                  </TableCell>
+                ) : null}
+              </TableRow>
+            ))}
+            <TableRow>
+              <TableCell className="font-semibold">Total</TableCell>
+              <TableCell className="text-center font-semibold">
+                {group.qty}
+              </TableCell>
+              <TableCell className="text-right font-mono font-semibold tabular-nums">
+                {fmtUsd(group.total)}
+              </TableCell>
+              <TableCell colSpan={isAdmin ? 2 : 1} />
+            </TableRow>
+          </TableBody>
+        </Table>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 export function RekapPage() {
   const { member, isAdmin } = useAuth()
@@ -66,8 +175,7 @@ export function RekapPage() {
     busyId,
     filtered,
     stats,
-    byUser,
-    batches,
+    orderGroups,
     refresh,
     toggleDelivered,
     togglePaid,
@@ -77,13 +185,22 @@ export function RekapPage() {
     memberNama: member?.nama ?? null,
   })
 
+  const [detailGroup, setDetailGroup] = useState<OrderGroup | null>(null)
   const [archiveTarget, setArchiveTarget] = useState<OrderRow | null>(null)
   const [shareBusy, setShareBusy] = useState(false)
+
+  const liveDetailGroup = useMemo(() => {
+    if (!detailGroup) return null
+    return orderGroups.find((g) => g.key === detailGroup.key) ?? null
+  }, [detailGroup, orderGroups])
 
   const confirmArchive = async () => {
     if (!archiveTarget) return
     await archiveRow(archiveTarget)
     setArchiveTarget(null)
+    if (liveDetailGroup && liveDetailGroup.lines.length <= 1) {
+      setDetailGroup(null)
+    }
   }
 
   const handleShareDashboard = async () => {
@@ -114,7 +231,7 @@ export function RekapPage() {
     <PageStack>
       <PageHeader
         title="Rekap Order"
-        subtitle="List & angka per periode (mirror dashboard/rekap lama)"
+        subtitle="Ringkasan order per periode — klik detail untuk lihat item"
       >
         <div className="flex flex-wrap gap-2">
           {isAdmin ? (
@@ -228,7 +345,7 @@ export function RekapPage() {
           </div>
           <p className="mt-3 text-[11px] text-muted-foreground">
             {isAdmin
-              ? 'Mode admin: delivered & arsip (soft delete) memakai kolom existing.'
+              ? 'Mode admin: delivered per item di detail · bayar per periode member.'
               : 'Mode member: menampilkan order milikmu saja.'}
           </p>
         </CardContent>
@@ -266,37 +383,99 @@ export function RekapPage() {
       {!loading ? (
         <Card className="border-border/60 bg-card/80">
           <CardHeader>
-            <CardTitle className="text-primary">Total per User</CardTitle>
+            <CardTitle className="text-primary">Daftar Order</CardTitle>
+            <CardDescription>
+              {orderGroups.length} order · {stats.lineCount} baris item
+            </CardDescription>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            {byUser.length === 0 ? (
+            {orderGroups.length === 0 ? (
               <EmptyState title="Tidak ada data" />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Periode</TableHead>
+                    <TableHead>Order</TableHead>
                     <TableHead>Nama</TableHead>
-                    <TableHead className="text-center">Baris</TableHead>
+                    <TableHead className="hidden md:table-cell">Waktu</TableHead>
+                    <TableHead className="text-center">Item</TableHead>
                     <TableHead className="text-center">Qty</TableHead>
                     <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-center">Scrap</TableHead>
+                    <TableHead className="text-center">Delivered</TableHead>
+                    <TableHead className="text-center">Bayar</TableHead>
+                    <TableHead className="text-right">Detail</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {byUser.map((u) => (
-                    <TableRow key={u.nama}>
-                      <TableCell className="font-medium">{u.nama}</TableCell>
-                      <TableCell className="text-center text-muted-foreground">
-                        {u.count}
+                  {orderGroups.map((group) => (
+                    <TableRow key={group.key}>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                        {formatOrderankeLabel(group.orderanke)}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        {group.order_no || group.order_id || '—'}
+                      </TableCell>
+                      <TableCell className="font-medium">{group.nama}</TableCell>
+                      <TableCell className="hidden text-muted-foreground md:table-cell">
+                        {group.waktu
+                          ? new Date(group.waktu).toLocaleString()
+                          : '—'}
                       </TableCell>
                       <TableCell className="text-center text-muted-foreground">
-                        {u.qty}
+                        {group.lineCount}
+                      </TableCell>
+                      <TableCell className="text-center text-muted-foreground">
+                        {group.qty}
                       </TableCell>
                       <TableCell className="text-right font-mono tabular-nums">
-                        {fmtUsd(u.total)}
+                        {fmtUsd(group.total)}
                       </TableCell>
-                      <TableCell className="text-center text-muted-foreground">
-                        {u.scrap > 0 ? Number(u.scrap.toFixed(2)) : '—'}
+                      <TableCell className="text-center">
+                        <Badge
+                          variant={
+                            group.allDelivered
+                              ? 'default'
+                              : group.deliveredCount > 0
+                                ? 'outline'
+                                : 'secondary'
+                          }
+                        >
+                          {deliveredLabel(group)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {isAdmin ? (
+                          <Button
+                            variant={group.paid ? 'default' : 'outline'}
+                            size="sm"
+                            disabled={group.lines.some((l) => busyId === l.id)}
+                            onClick={() =>
+                              void togglePaid(
+                                group.lines[0],
+                                member?.nama || undefined,
+                              )
+                            }
+                          >
+                            {group.paid ? 'Lunas' : 'Belum'}
+                          </Button>
+                        ) : (
+                          <Badge
+                            variant={group.paid ? 'default' : 'secondary'}
+                          >
+                            {group.paid ? 'Lunas' : 'Belum'}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDetailGroup(group)}
+                        >
+                          <Eye className="size-4" />
+                          <span className="hidden sm:inline">Detail</span>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -307,112 +486,16 @@ export function RekapPage() {
         </Card>
       ) : null}
 
-      {!loading
-        ? batches.map((batch) => (
-            <Card
-              key={batch.orderanke}
-              className="border-border/60 bg-card/80"
-            >
-              <CardHeader>
-                <CardTitle className="text-primary">
-                  Batch {formatOrderankeLabel(batch.orderanke)}
-                </CardTitle>
-                <CardDescription>
-                  {batch.count} baris • {fmtUsd(batch.total)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-4 pb-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order</TableHead>
-                      <TableHead>Nama</TableHead>
-                      <TableHead>Waktu</TableHead>
-                      <TableHead>Item</TableHead>
-                      <TableHead className="text-center">Qty</TableHead>
-                      <TableHead className="text-right">Subtotal</TableHead>
-                      <TableHead className="text-center">Delivered</TableHead>
-                      <TableHead className="text-center">Bayar</TableHead>
-                      {isAdmin ? (
-                        <TableHead className="text-right">Aksi</TableHead>
-                      ) : null}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {batch.items.map((row) => (
-                      <TableRow key={row.id}>
-                        <TableCell className="text-muted-foreground">
-                          {row.order_no || row.order_id || '—'}
-                        </TableCell>
-                        <TableCell className="font-medium">{row.nama}</TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {row.waktu
-                            ? new Date(row.waktu).toLocaleString()
-                            : '—'}
-                        </TableCell>
-                        <TableCell>{row.item}</TableCell>
-                        <TableCell className="text-center text-muted-foreground">
-                          {row.qty}
-                        </TableCell>
-                        <TableCell className="text-right font-mono tabular-nums">
-                          {fmtUsd(row.subtotal)}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {isAdmin ? (
-                            <Button
-                              variant={row.delivered ? 'default' : 'secondary'}
-                              size="sm"
-                              disabled={busyId === row.id}
-                              onClick={() => void toggleDelivered(row)}
-                            >
-                              {row.delivered ? 'Sudah' : 'Belum'}
-                            </Button>
-                          ) : (
-                            <Badge
-                              variant={row.delivered ? 'default' : 'secondary'}
-                            >
-                              {row.delivered ? 'Sudah' : 'Belum'}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {isAdmin ? (
-                            <Button
-                              variant={row.paid ? 'default' : 'outline'}
-                              size="sm"
-                              disabled={busyId === row.id}
-                              onClick={() =>
-                                void togglePaid(row, member?.nama || undefined)
-                              }
-                            >
-                              {row.paid ? 'Lunas' : 'Belum'}
-                            </Button>
-                          ) : (
-                            <Badge variant={row.paid ? 'default' : 'secondary'}>
-                              {row.paid ? 'Lunas' : 'Belum'}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        {isAdmin ? (
-                          <TableCell className="text-right">
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              disabled={busyId === row.id}
-                              onClick={() => setArchiveTarget(row)}
-                            >
-                              Arsip
-                            </Button>
-                          </TableCell>
-                        ) : null}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          ))
-        : null}
+      {liveDetailGroup ? (
+        <RekapOrderDetailDialog
+          group={liveDetailGroup}
+          isAdmin={isAdmin}
+          busyId={busyId}
+          onClose={() => setDetailGroup(null)}
+          onToggleDelivered={toggleDelivered}
+          onArchive={setArchiveTarget}
+        />
+      ) : null}
 
       <ConfirmDeleteDialog
         open={!!archiveTarget}

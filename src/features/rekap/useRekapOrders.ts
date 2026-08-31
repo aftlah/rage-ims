@@ -11,6 +11,7 @@ import {
   archiveOrderById,
   fetchOrdersForDashboard,
   groupOrdersByBatch,
+  groupOrdersBySubmission,
   summarizeByUser,
   summarizeFiltered,
   updateOrderDelivered,
@@ -116,6 +117,10 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
     [catalog, filtered],
   )
   const batches = useMemo(() => groupOrdersByBatch(filtered), [filtered])
+  const orderGroups = useMemo(
+    () => groupOrdersBySubmission(filtered),
+    [filtered],
+  )
 
   const toggleDelivered = useCallback(
     async (row: OrderRow) => {
@@ -203,6 +208,7 @@ export function useRekapOrders({ isAdmin, memberNama }: UseRekapOrdersArgs) {
     stats,
     byUser,
     batches,
+    orderGroups,
     refresh,
     toggleDelivered,
     togglePaid,

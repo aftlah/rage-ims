@@ -27,6 +27,22 @@ export type BatchGroup = {
   count: number
 }
 
+export type OrderGroup = {
+  key: string
+  order_id: string | null
+  order_no: string | null
+  nama: string
+  orderanke: number
+  waktu: string
+  lines: OrderRow[]
+  lineCount: number
+  qty: number
+  total: number
+  deliveredCount: number
+  allDelivered: boolean
+  paid: boolean
+}
+
 export type DeliveredFilter = 'all' | 'delivered' | 'pending'
 
 const FULL_COLS =
@@ -172,6 +188,54 @@ export function groupOrdersByBatch(rows: OrderRow[]): BatchGroup[] {
     groups[key].count += 1
   }
   return Object.values(groups).sort((a, b) => b.orderanke - a.orderanke)
+}
+
+function orderGroupKey(row: OrderRow): string {
+  if (row.order_id) return `oid:${row.order_id}`
+  const waktuKey = row.waktu ? row.waktu.slice(0, 16) : String(row.id)
+  return `fb:${row.nama}|${row.orderanke}|${row.order_no || ''}|${waktuKey}`
+}
+
+/** Group line items into one row per order submission. */
+export function groupOrdersBySubmission(rows: OrderRow[]): OrderGroup[] {
+  const map = new Map<string, OrderGroup>()
+
+  for (const row of rows) {
+    const key = orderGroupKey(row)
+    let group = map.get(key)
+    if (!group) {
+      group = {
+        key,
+        order_id: row.order_id,
+        order_no: row.order_no,
+        nama: row.nama,
+        orderanke: row.orderanke,
+        waktu: row.waktu,
+        lines: [],
+        lineCount: 0,
+        qty: 0,
+        total: 0,
+        deliveredCount: 0,
+        allDelivered: true,
+        paid: row.paid,
+      }
+      map.set(key, group)
+    }
+    group.lines.push(row)
+    group.lineCount += 1
+    group.qty += row.qty || 0
+    group.total += row.subtotal || 0
+    if (row.delivered) group.deliveredCount += 1
+    if (!row.delivered) group.allDelivered = false
+    if (row.waktu > group.waktu) group.waktu = row.waktu
+  }
+
+  return Array.from(map.values()).sort(
+    (a, b) =>
+      b.orderanke - a.orderanke ||
+      new Date(b.waktu).getTime() - new Date(a.waktu).getTime() ||
+      a.nama.localeCompare(b.nama),
+  )
 }
 
 export type UserTotal = {
