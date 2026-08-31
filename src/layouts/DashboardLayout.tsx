@@ -200,8 +200,7 @@ export function DashboardLayout() {
   }, [location.pathname])
 
   const sidebarFooter = (
-    <div className="space-y-2 border-t border-border p-3">
-      <LanguageSwitcher className="w-full justify-center" compact />
+    <div className="border-t border-border p-3">
       <Button
         variant="outline"
         className="w-full"
