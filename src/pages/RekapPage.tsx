@@ -58,6 +58,11 @@ import {
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 const WEEKS = Array.from({ length: 5 }, (_, i) => i + 1)
 
+function fmtScrapQty(value: number, empty = '—'): string {
+  if (value <= 0) return empty
+  return String(Number(value.toFixed(2)))
+}
+
 function deliveredLabel(group: OrderGroup): string {
   if (group.allDelivered) return 'Sudah'
   if (group.deliveredCount === 0) return 'Belum'
@@ -89,6 +94,7 @@ function RekapOrderTable({
           <TableHead className="hidden md:table-cell">Waktu</TableHead>
           <TableHead className="text-center">Item</TableHead>
           <TableHead className="text-center">Qty</TableHead>
+          <TableHead className="text-center">Qty MS</TableHead>
           <TableHead className="text-right">Total</TableHead>
           <TableHead className="text-center">Delivered</TableHead>
           <TableHead className="text-center">Metal Scrap</TableHead>
@@ -108,6 +114,9 @@ function RekapOrderTable({
             </TableCell>
             <TableCell className="text-center text-muted-foreground">
               {group.qty}
+            </TableCell>
+            <TableCell className="text-center font-mono tabular-nums text-muted-foreground">
+              {fmtScrapQty(group.orderScrapTotal)}
             </TableCell>
             <TableCell className="text-right font-mono tabular-nums">
               {fmtUsd(group.total)}
@@ -523,7 +532,8 @@ export function RekapPage() {
                 </CardTitle>
                 <CardDescription>
                   {section.orderCount} order · {section.lineCount} baris · qty{' '}
-                  {section.qty} · {fmtUsd(section.total)}
+                  {section.qty} · qty ms {fmtScrapQty(section.scrap, '0')} ·{' '}
+                  {fmtUsd(section.total)}
                 </CardDescription>
               </CardHeader>
               <CardContent className="px-4 pb-4">

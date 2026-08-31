@@ -43,6 +43,7 @@ export type OrderGroup = {
   paid: boolean
   periodScrapTotal: number
   periodScrapGiven: boolean
+  orderScrapTotal: number
 }
 
 export type OrderPeriodSection = {
@@ -52,6 +53,7 @@ export type OrderPeriodSection = {
   lineCount: number
   qty: number
   total: number
+  scrap: number
 }
 
 export type DeliveredFilter = 'all' | 'delivered' | 'pending'
@@ -231,6 +233,7 @@ export function groupOrdersBySubmission(rows: OrderRow[]): OrderGroup[] {
         paid: row.paid,
         periodScrapTotal: 0,
         periodScrapGiven: false,
+        orderScrapTotal: 0,
       }
       map.set(key, group)
     }
@@ -279,8 +282,14 @@ export function enrichOrderGroupsWithScrap(
 
   return groups.map((group) => {
     const entry = periodMap.get(`${group.nama}|${group.orderanke}`)!
+    let orderScrapTotal = 0
+    for (const line of group.lines) {
+      orderScrapTotal +=
+        getCatalogScrap(line.item, catalog) * (line.qty || 0)
+    }
     return {
       ...group,
+      orderScrapTotal,
       periodScrapTotal: entry.totalScrap,
       periodScrapGiven: entry.totalScrap > 0 && entry.scrapGiven,
     }
@@ -308,6 +317,7 @@ export function groupOrderGroupsByPeriod(
       lineCount: periodGroups.reduce((sum, g) => sum + g.lineCount, 0),
       qty: periodGroups.reduce((sum, g) => sum + g.qty, 0),
       total: periodGroups.reduce((sum, g) => sum + g.total, 0),
+      scrap: periodGroups.reduce((sum, g) => sum + g.orderScrapTotal, 0),
     }))
 }
 
