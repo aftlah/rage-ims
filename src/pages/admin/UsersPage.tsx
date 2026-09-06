@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RefreshCw, Trash2 } from 'lucide-react'
+import { Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { PageHeader, PageStack } from '@/components/layout/PageHeader'
 import { ConfirmMemberDeleteDialog } from '@/components/ConfirmMemberDeleteDialog'
 import {
@@ -16,6 +16,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -36,6 +44,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import {
+  createMemberViaAdmin,
   fetchAccountAuditLogs,
   fetchAdminMembers,
   deleteMemberViaAdmin,
@@ -59,6 +68,12 @@ export function UsersPage() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createNama, setCreateNama] = useState('')
+  const [createUsername, setCreateUsername] = useState('')
+  const [createPassword, setCreatePassword] = useState('')
+  const [createRole, setCreateRole] = useState<string>('Hoodlum')
+  const [createBusy, setCreateBusy] = useState(false)
 
   const isSelfSelected = useMemo(() => {
     if (!selected) return false
@@ -164,18 +179,65 @@ export function UsersPage() {
     await refresh()
   }
 
+  const resetCreateForm = () => {
+    setCreateNama('')
+    setCreateUsername('')
+    setCreatePassword('')
+    setCreateRole('Hoodlum')
+  }
+
+  const handleCreateMember = async () => {
+    setCreateBusy(true)
+    try {
+      const res = await createMemberViaAdmin({
+        nama: createNama,
+        username: createUsername,
+        password: createPassword,
+        role: createRole,
+        actorAuthUserId: user?.id ?? null,
+      })
+      if (!res.ok) {
+        toast.error(res.error)
+        return
+      }
+      toast.success(
+        `Member ${res.member.nama} ditambahkan (login: ${res.username})`,
+      )
+      setCreateOpen(false)
+      resetCreateForm()
+      setSelected(res.member)
+      setRoleDraft(res.member.role || 'Hoodlum')
+      setUsernameDraft(res.username)
+      await refresh()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Gagal menambah member')
+    } finally {
+      setCreateBusy(false)
+    }
+  }
+
   if (!isAdmin) return null
 
   return (
     <PageStack>
       <PageHeader
         title="Admin Users"
-        subtitle="Kelola role & username member (hanya admin)"
+        subtitle="Tambah member, kelola role & username (hanya admin)"
       >
-        <Button variant="outline" size="sm" onClick={() => void refresh()}>
-          <RefreshCw className="size-4" />
-          <span className="hidden sm:inline">Refresh</span>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            disabled={busy || createBusy}
+            onClick={() => setCreateOpen(true)}
+          >
+            <Plus className="size-4" />
+            <span className="hidden sm:inline">Tambah Member</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => void refresh()}>
+            <RefreshCw className="size-4" />
+            <span className="hidden sm:inline">Refresh</span>
+          </Button>
+        </div>
       </PageHeader>
 
       {error ? <ErrorState message={error} /> : null}
@@ -257,7 +319,7 @@ export function UsersPage() {
                     </p>
                   </div>
                   <div className="sm:col-span-2">
-                    <Label className="text-muted-foreground">Auth User ID</Label>
+                    <Label className="text-muted-foreground">ID Akun</Label>
                     <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
                       {selected.auth_user_id || '—'}
                     </p>
@@ -275,7 +337,7 @@ export function UsersPage() {
             <CardHeader>
               <CardTitle>Update Role</CardTitle>
               <CardDescription>
-                Update langsung ke tabel members (RLS admin), + audit log RPC.
+                Ubah jabatan/role member yang dipilih.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -313,9 +375,7 @@ export function UsersPage() {
             <CardHeader>
               <CardTitle>Ubah Username Login</CardTitle>
               <CardDescription>
-                Hanya admin. Mengubah email Supabase Auth + tabel{' '}
-                <code>members</code> sekaligus via Edge Function{' '}
-                <code>admin-sync-user</code>.
+                Ganti username yang dipakai member untuk masuk ke sistem.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -343,9 +403,8 @@ export function UsersPage() {
             <CardHeader>
               <CardTitle>Hapus Member</CardTitle>
               <CardDescription>
-                Menghapus member beserta semua data terkait (order, storan,
-                absen, drugs, nitip cuci) dan akun login. Wajib konfirmasi nama
-                + PIN hapus.
+                Menghapus member beserta seluruh data terkait dan akses login.
+                Wajib konfirmasi nama + PIN hapus.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -411,6 +470,102 @@ export function UsersPage() {
           </Card>
         </div>
       </div>
+
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => {
+          if (createBusy) return
+          setCreateOpen(open)
+          if (!open) resetCreateForm()
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tambah Member</DialogTitle>
+            <DialogDescription>
+              Isi data di bawah untuk membuat akun login member baru.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="create-nama">Nama</Label>
+              <Input
+                id="create-nama"
+                value={createNama}
+                disabled={createBusy}
+                onChange={(e) => setCreateNama(e.target.value)}
+                placeholder="Contoh: Leo"
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="create-username">Username login</Label>
+              <Input
+                id="create-username"
+                value={createUsername}
+                disabled={createBusy}
+                onChange={(e) => setCreateUsername(e.target.value)}
+                placeholder="contoh: leo"
+                autoComplete="off"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Username ini dipakai member untuk masuk ke sistem.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="create-password">Password awal</Label>
+              <Input
+                id="create-password"
+                type="password"
+                value={createPassword}
+                disabled={createBusy}
+                onChange={(e) => setCreatePassword(e.target.value)}
+                placeholder="Minimal 6 karakter"
+                autoComplete="new-password"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>Role</Label>
+              <Select
+                value={createRole}
+                disabled={createBusy}
+                onValueChange={setCreateRole}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MEMBER_ROLES.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              disabled={createBusy}
+              onClick={() => {
+                setCreateOpen(false)
+                resetCreateForm()
+              }}
+            >
+              Batal
+            </Button>
+            <Button
+              disabled={createBusy}
+              onClick={() => void handleCreateMember()}
+            >
+              {createBusy ? 'Menyimpan…' : 'Buat Member'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmMemberDeleteDialog
         open={deleteOpen}

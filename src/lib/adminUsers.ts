@@ -1,5 +1,9 @@
 import { AUTH_EMAIL_DOMAIN } from './constants'
-import { deleteAuthUserViaEdge, syncAuthUserEmail } from './adminAuthSync'
+import {
+  createAuthUserViaEdge,
+  deleteAuthUserViaEdge,
+  syncAuthUserEmail,
+} from './adminAuthSync'
 import { rpcAdminInsertAuditLog, rpcAdminPatchMember } from './adminRpc'
 import { supabase } from './supabase'
 
@@ -155,6 +159,78 @@ export async function patchMemberProfileViaRpc(args: {
   })
 
   return { ok: true, email: nextEmail }
+}
+
+/**
+ * Admin-only: create Auth login + members row via Edge Function.
+ */
+export async function createMemberViaAdmin(args: {
+  nama: string
+  username: string
+  password: string
+  role: string
+  actorAuthUserId: string | null
+}): Promise<
+  | {
+      ok: true
+      member: AdminMember
+      username: string
+    }
+  | { ok: false; error: string }
+> {
+  const nama = String(args.nama || '').trim()
+  const username = String(args.username || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]/g, '')
+  const password = String(args.password || '')
+  const role = String(args.role || 'Hoodlum').trim() || 'Hoodlum'
+
+  if (!nama || nama.length < 2) {
+    return { ok: false, error: 'Nama minimal 2 karakter' }
+  }
+  if (!username || username.length < 3) {
+    return { ok: false, error: 'Username minimal 3 karakter' }
+  }
+  if (password.length < 6) {
+    return { ok: false, error: 'Password minimal 6 karakter' }
+  }
+  if (!(MEMBER_ROLES as readonly string[]).includes(role)) {
+    return { ok: false, error: 'Role tidak valid' }
+  }
+
+  const createRes = await createAuthUserViaEdge({
+    nama,
+    username,
+    password,
+    role,
+  })
+  if (!createRes.ok) return createRes
+
+  await rpcAdminInsertAuditLog({
+    action: 'create_member',
+    actor_auth_user_id: args.actorAuthUserId,
+    target_auth_user_id: createRes.authUserId,
+    target_member_id: createRes.memberId,
+    meta: {
+      nama: createRes.nama,
+      username: createRes.username,
+      role: createRes.role,
+      email: createRes.email,
+    },
+  })
+
+  return {
+    ok: true,
+    username: createRes.username,
+    member: {
+      id: createRes.memberId,
+      nama: createRes.nama,
+      role: createRes.role,
+      email: createRes.email,
+      auth_user_id: createRes.authUserId,
+    },
+  }
 }
 
 /**

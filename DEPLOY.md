@@ -80,12 +80,14 @@ From the project root (requires [Supabase CLI](https://supabase.com/docs/guides/
 supabase functions deploy discord-notify
 supabase functions deploy admin-sync-user
 supabase functions deploy admin-delete-user
+supabase functions deploy admin-create-user
 ```
 
 Sources:
 - `supabase/functions/discord-notify/index.ts`
 - `supabase/functions/admin-sync-user/index.ts`
 - `supabase/functions/admin-delete-user/index.ts`
+- `supabase/functions/admin-create-user/index.ts`
 
 JWT verification stays **on** (default) so only logged-in clients can invoke them.
 
@@ -139,7 +141,7 @@ Set `DISCORD_ENABLED=false` to soft-disable all Discord posts without undeployin
 
 - [ ] `.env` filled locally, not committed
 - [ ] `supabase/app_settings.sql` executed once
-- [ ] `discord-notify`, `admin-sync-user`, and `admin-delete-user` deployed
+- [ ] `discord-notify`, `admin-sync-user`, `admin-delete-user`, and `admin-create-user` deployed
 - [ ] `npm run build` succeeded
 - [ ] Uploaded `dist/` contents including `.htaccess`
 - [ ] Hard refresh browser after upload

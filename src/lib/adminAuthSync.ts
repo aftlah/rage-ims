@@ -8,6 +8,10 @@ type FunctionJson = {
   deletedMemberId?: number
   deletedAuthUserId?: string | null
   nama?: string
+  memberId?: number
+  authUserId?: string
+  role?: string
+  username?: string
 }
 
 async function readFunctionJsonError(
@@ -79,6 +83,64 @@ export type DeleteAuthUserResult =
       nama: string
     }
   | { ok: false; error: string }
+
+export type CreateAuthUserResult =
+  | {
+      ok: true
+      memberId: number
+      authUserId: string
+      nama: string
+      role: string
+      email: string
+      username: string
+    }
+  | { ok: false; error: string }
+
+/** Admin-only: create Auth user + members row via Edge Function. */
+export async function createAuthUserViaEdge(args: {
+  nama: string
+  username: string
+  password: string
+  role: string
+}): Promise<CreateAuthUserResult> {
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-create-user', {
+      body: {
+        nama: args.nama,
+        username: args.username,
+        password: args.password,
+        role: args.role,
+      },
+    })
+
+    if (error) {
+      return {
+        ok: false,
+        error: await readFunctionJsonError(error, data),
+      }
+    }
+
+    const res = (data || {}) as FunctionJson
+    if (!res.ok) {
+      return { ok: false, error: res.error || 'Gagal menambah member' }
+    }
+
+    return {
+      ok: true,
+      memberId: Number(res.memberId || 0),
+      authUserId: String(res.authUserId || ''),
+      nama: String(res.nama || args.nama),
+      role: String(res.role || args.role),
+      email: String(res.email || ''),
+      username: String(res.username || args.username),
+    }
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : 'Gagal menambah member',
+    }
+  }
+}
 
 /** Admin-only: delete members row + Supabase Auth user via Edge Function. */
 export async function deleteAuthUserViaEdge(args: {
