@@ -124,15 +124,157 @@ const GROUP_ORDER = [
   'LAINNYA',
 ] as const
 
-function assignGroupForItem(item: string, kategori?: string): string {
-  const k = String(kategori || '').toUpperCase()
-  const n = String(item || '').toUpperCase()
-  if (k.includes('HIGH') || n.includes('HIGH TABEL')) return 'ORDER KE HIGH TABEL'
-  if (k.includes('ALLSTAR') || n.includes('ALLSTAR')) return 'ORDER KE ALLSTAR'
-  if (k.includes('BOA') || n.includes('BOA')) return 'ORDER KE BOA'
-  if (k.includes('BURGENK') || n.includes('BURGENK')) return 'ORDER KE BURGENK'
-  if (k.includes('PP') || n === 'PP') return 'ORDER KE PP'
+type ShareGroupName = (typeof GROUP_ORDER)[number]
+
+const GROUP_ITEMS: Record<ShareGroupName, string[]> = {
+  'ORDER KE HIGH TABEL': [
+    'BLACK REVOLVER',
+    'VEST',
+    'Assault Rifle',
+    'Carbine Rifle',
+    'Ammo 762',
+    'Ammo 556',
+    'Virtus#3',
+  ],
+  'ORDER KE ALLSTAR': [],
+  'ORDER KE BOA': [
+    'SHOTGUN',
+    'AMMO 12 GAUGE',
+    'PISTOL X17',
+    'X17 + Attachment',
+    'AMMO 44 MAGNUM',
+    'KVR',
+    'AMMO .45',
+    'NAVY REVOLVER',
+  ],
+  'ORDER KE BURGENK': [
+    'Tactical Flashlight',
+    'Suppressor',
+    'Tactical Suppressor',
+    'Grip',
+    'Extended Pistol Clip',
+    'Extended SMG Clip',
+    'Extended Rifle Clip',
+    'Rifle Drum',
+    'Macro Scope',
+    'Medium Scope',
+  ],
+  'ORDER KE PP': [
+    'PISTOL KACANG',
+    'PISTOL .50',
+    'CERAMIC PISTOL',
+    'TECH 9',
+    'MINI SMG',
+    'MICRO SMG',
+    'AMMO 9MM',
+    'AMMO .50',
+    'VEST MEDIUM',
+  ],
+  LAINNYA: ['LOCKPICK'],
+}
+
+function normItemName(s: string): string {
+  return String(s || '')
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, ' ')
+}
+
+function assignGroupForItem(item: string): ShareGroupName {
+  const n = normItemName(item)
+  for (const grp of GROUP_ORDER) {
+    const arr = (GROUP_ITEMS[grp] || []).map(normItemName)
+    if (arr.includes(n)) return grp
+  }
   return 'LAINNYA'
+}
+
+function sortRowsByGroupOrder<T extends { item: string }>(
+  rows: T[],
+  grp: ShareGroupName,
+): T[] {
+  const order = (GROUP_ITEMS[grp] || []).map(normItemName)
+  return rows.slice().sort((a, b) => {
+    const ia = order.indexOf(normItemName(a.item))
+    const ib = order.indexOf(normItemName(b.item))
+    const sa = ia < 0 ? 9999 : ia
+    const sb = ib < 0 ? 9999 : ib
+    if (sa !== sb) return sa - sb
+    return a.item.localeCompare(b.item)
+  })
+}
+
+function buildAlignedShareTable(
+  rows: Array<{ item: string; qty: number; unit: number }>,
+): { lines: string[]; total: number } {
+  const itemsWithPrice = rows.map((r) => {
+    const unit = r.unit || 0
+    const sub = unit * (r.qty || 0)
+    return {
+      item: r.item,
+      qty: r.qty || 0,
+      unitFmt: fmtDiscordMoney(unit),
+      sub,
+      subFmt: fmtDiscordMoney(sub),
+    }
+  })
+
+  const itemW = Math.max(
+    'Item'.length,
+    ...itemsWithPrice.map((x) => x.item.length),
+    1,
+  )
+  const qtyW = Math.max(
+    'Qty'.length,
+    ...itemsWithPrice.map((x) => String(x.qty).length),
+    1,
+  )
+  const hargaW = Math.max(
+    'Harga'.length,
+    ...itemsWithPrice.map((x) => x.unitFmt.length),
+    1,
+  )
+  const subW = Math.max(
+    'Subtotal'.length,
+    ...itemsWithPrice.map((x) => x.subFmt.length),
+    1,
+  )
+
+  const header =
+    'Item'.padEnd(itemW) +
+    ' | ' +
+    'Qty'.padStart(qtyW) +
+    ' | ' +
+    'Harga'.padStart(hargaW) +
+    ' | ' +
+    'Subtotal'.padStart(subW)
+  const sep =
+    '-'.repeat(itemW) +
+    '-+-' +
+    '-'.repeat(qtyW) +
+    '-+-' +
+    '-'.repeat(hargaW) +
+    '-+-' +
+    '-'.repeat(subW)
+
+  const lines = [header, sep]
+  let total = 0
+  for (const x of itemsWithPrice) {
+    total += x.sub
+    lines.push(
+      x.item.padEnd(itemW) +
+        ' | ' +
+        String(x.qty).padStart(qtyW) +
+        ' | ' +
+        x.unitFmt.padStart(hargaW) +
+        ' | ' +
+        x.subFmt.padStart(subW),
+    )
+  }
+  const label = 'Total : '.padEnd(itemW + 3 + qtyW + 3 + hargaW)
+  lines.push(label + ' | ' + fmtDiscordMoney(total).padStart(subW))
+
+  return { lines, total }
 }
 
 /** Share dashboard qty totals from already-loaded rekap rows. */
@@ -158,7 +300,7 @@ export async function shareDashboardFromRows(
   }
   if (opts.name) lines.push(`Nama: ${opts.name}`)
 
-  const groupTotals: Record<string, number> = {
+  const groupTotals: Record<ShareGroupName, number> = {
     'ORDER KE HIGH TABEL': 0,
     'ORDER KE ALLSTAR': 0,
     'ORDER KE BOA': 0,
@@ -174,8 +316,10 @@ export async function shareDashboardFromRows(
     lines.push('')
     lines.push(`Batch M${m}-W${w}`)
 
-    const summaryMap: Record<string, { item: string; qty: number; unit: number }> =
-      {}
+    const summaryMap: Record<
+      string,
+      { item: string; qty: number; unit: number }
+    > = {}
     for (const r of items) {
       const key = r.item
       if (!summaryMap[key]) {
@@ -184,29 +328,22 @@ export async function shareDashboardFromRows(
       summaryMap[key].qty += r.qty || 0
     }
 
-    const groupedMap: Record<string, typeof summaryMap[string][]> = {}
+    const groupedMap: Partial<
+      Record<ShareGroupName, Array<{ item: string; qty: number; unit: number }>>
+    > = {}
     for (const s of Object.values(summaryMap)) {
       const grp = assignGroupForItem(s.item)
       ;(groupedMap[grp] ||= []).push(s)
     }
 
     for (const grp of GROUP_ORDER) {
-      const list = (groupedMap[grp] || []).sort((a, b) =>
-        a.item.localeCompare(b.item),
-      )
+      const list = sortRowsByGroupOrder(groupedMap[grp] || [], grp)
       if (!list.length) continue
       lines.push('')
       lines.push(grp)
-      let totalGrp = 0
-      for (const x of list) {
-        const sub = x.unit * x.qty
-        totalGrp += sub
-        lines.push(
-          `${x.item} | ${x.qty} | ${fmtDiscordMoney(x.unit)} | ${fmtDiscordMoney(sub)}`,
-        )
-      }
-      lines.push(`Total : ${fmtDiscordMoney(totalGrp)}`)
-      groupTotals[grp] = (groupTotals[grp] || 0) + totalGrp
+      const table = buildAlignedShareTable(list)
+      lines.push(...table.lines)
+      groupTotals[grp] += table.total
     }
   }
 
