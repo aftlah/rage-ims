@@ -1,15 +1,12 @@
 import { parseWeeklyProfitViewerIds } from './weeklyProfitAccess'
 import { supabase } from './supabase'
 
-export const DEFAULT_GUN_ATTACHMENT_MARKUP_PCT = 10
-
 export const APP_SETTING_KEYS = [
   'maintenance_mode',
   'maintenance_message',
   'admin_delete_pin',
   'site_notice',
   'weekly_profit_viewers',
-  'gun_attachment_markup_pct',
 ] as const
 
 export type AppSettingKey = (typeof APP_SETTING_KEYS)[number]
@@ -20,7 +17,6 @@ export type AppSettings = {
   adminDeletePin: string
   siteNotice: string
   weeklyProfitViewerIds: number[]
-  gunAttachmentMarkupPct: number
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
@@ -29,7 +25,6 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   adminDeletePin: '',
   siteNotice: '',
   weeklyProfitViewerIds: [],
-  gunAttachmentMarkupPct: DEFAULT_GUN_ATTACHMENT_MARKUP_PCT,
 }
 
 type SettingRow = {
@@ -63,26 +58,6 @@ function asString(value: unknown, fallback: string): string {
   return String(v)
 }
 
-export function normalizeGunAttachmentMarkupPct(value: unknown): number {
-  const v = unwrapJson(value)
-  const n = typeof v === 'number' ? v : Number(v)
-  if (!Number.isFinite(n)) return DEFAULT_GUN_ATTACHMENT_MARKUP_PCT
-  return Math.min(100, Math.max(0, Math.round(n)))
-}
-
-export function validateGunAttachmentMarkupPct(
-  value: number,
-): { ok: true; value: number } | { ok: false; error: string } {
-  if (!Number.isFinite(value)) {
-    return { ok: false, error: 'Markup harus angka valid' }
-  }
-  const rounded = Math.round(value)
-  if (rounded < 0 || rounded > 100) {
-    return { ok: false, error: 'Markup harus antara 0–100%' }
-  }
-  return { ok: true, value: rounded }
-}
-
 export function rowsToAppSettings(rows: SettingRow[]): AppSettings {
   const map = new Map(rows.map((r) => [r.key, r.value]))
   return {
@@ -104,9 +79,6 @@ export function rowsToAppSettings(rows: SettingRow[]): AppSettings {
     ),
     weeklyProfitViewerIds: parseWeeklyProfitViewerIds(
       map.get('weekly_profit_viewers'),
-    ),
-    gunAttachmentMarkupPct: normalizeGunAttachmentMarkupPct(
-      map.get('gun_attachment_markup_pct'),
     ),
   }
 }
@@ -173,11 +145,6 @@ export async function upsertAppSetting(
   value: boolean | string | number | number[],
   updatedBy: string | null,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (key === 'gun_attachment_markup_pct') {
-    const check = validateGunAttachmentMarkupPct(Number(value))
-    if (!check.ok) return { ok: false, error: check.error }
-  }
-
   if (key === 'admin_delete_pin') {
     const pin = String(value).trim()
     if (pin) {
@@ -210,7 +177,6 @@ export async function saveAppSettingsPatch(
     adminDeletePin: string
     siteNotice: string
     weeklyProfitViewerIds: number[]
-    gunAttachmentMarkupPct: number
   }>,
   updatedBy: string | null,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -231,11 +197,6 @@ export async function saveAppSettingsPatch(
   }
   if (patch.weeklyProfitViewerIds !== undefined) {
     entries.push(['weekly_profit_viewers', patch.weeklyProfitViewerIds])
-  }
-  if (patch.gunAttachmentMarkupPct !== undefined) {
-    const check = validateGunAttachmentMarkupPct(patch.gunAttachmentMarkupPct)
-    if (!check.ok) return { ok: false, error: check.error }
-    entries.push(['gun_attachment_markup_pct', check.value])
   }
 
   for (const [key, value] of entries) {

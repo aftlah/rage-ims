@@ -1,6 +1,11 @@
--- RAGE IMS: app_settings (run once in Supabase SQL Editor)
--- Stores maintenance mode, delete PIN, site notice, etc.
+-- RAGE IMS: app_settings
+-- Jalankan saat traffic sepi. Kalau tabel sudah ada, cukupini opsional
+-- (penghapusan markup % cukupi di kode app, bukan wajib SQL).
+--
+-- Tip deadlock: jalankan per blok (satu blok per eksekusi), jangan sekaligus
+-- dalam satu transaksi panjang saat ada user login / Settings terbuka.
 
+-- ========== BLOK 1: tabel + seed ==========
 create table if not exists public.app_settings (
   key text primary key,
   value jsonb not null default 'null'::jsonb,
@@ -11,20 +16,21 @@ create table if not exists public.app_settings (
 comment on table public.app_settings is
   'Key/value site settings (maintenance, delete PIN, notices). PIN is client-checked only.';
 
--- Seed defaults (do not overwrite existing keys)
 insert into public.app_settings (key, value)
 values
   ('maintenance_mode', 'false'::jsonb),
   ('maintenance_message', '"Sedang maintenance: Sebentar yaa kawan"'::jsonb),
   ('admin_delete_pin', '""'::jsonb),
   ('site_notice', '""'::jsonb),
-  ('weekly_profit_viewers', '[]'::jsonb),
-  ('gun_attachment_markup_pct', '10'::jsonb)
+  ('weekly_profit_viewers', '[]'::jsonb)
 on conflict (key) do nothing;
 
-alter table public.app_settings enable row level security;
+-- Opsional: hapus setting markup lama (aman diabaikan kalau tidak ada)
+delete from public.app_settings
+where key = 'gun_attachment_markup_pct';
 
--- Helpers: current user is admin in members table
+-- ========== BLOK 2: helper admin ==========
+-- (jalankan terpisah dari BLOK 1 kalau deadlock)
 create or replace function public.rage_is_admin()
 returns boolean
 language sql
@@ -42,6 +48,10 @@ $$;
 
 revoke all on function public.rage_is_admin() from public;
 grant execute on function public.rage_is_admin() to authenticated;
+
+-- ========== BLOK 3: RLS + policy ==========
+-- (jalankan terpisah; AccessExclusiveLock sering bentrok dengan query app)
+alter table public.app_settings enable row level security;
 
 drop policy if exists "app_settings_select_authenticated" on public.app_settings;
 create policy "app_settings_select_authenticated"

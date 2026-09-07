@@ -1,8 +1,3 @@
-import { isAdminRole } from './auth'
-import {
-  DEFAULT_GUN_ATTACHMENT_MARKUP_PCT,
-  normalizeGunAttachmentMarkupPct,
-} from './appSettings'
 import { supabase } from './supabase'
 
 export const CATALOG_CATEGORIES = ['Gun', 'Ammo', 'Attachment', 'Others'] as const
@@ -78,29 +73,13 @@ function isCatalogCategory(value: string): value is CatalogCategory {
   return (CATALOG_CATEGORIES as readonly string[]).includes(value)
 }
 
-export function gunAttachmentMarkupMultiplier(markupPct: number): number {
-  return 1 + normalizeGunAttachmentMarkupPct(markupPct) / 100
-}
-
+/** Catalog price is the sell price for everyone (no role markup). */
 export function getEffectivePrice(
-  kategori: string,
+  _kategori: string,
   basePrice: number,
-  role: string | null = null,
-  markupPct: number = DEFAULT_GUN_ATTACHMENT_MARKUP_PCT,
+  _role: string | null = null,
 ): number {
-  if (!isAdminRole(role) && (kategori === 'Gun' || kategori === 'Attachment')) {
-    return Math.round(basePrice * gunAttachmentMarkupMultiplier(markupPct))
-  }
   return basePrice
-}
-
-export function reverseGunAttachmentBasePrice(
-  sellPrice: number,
-  markupPct: number = DEFAULT_GUN_ATTACHMENT_MARKUP_PCT,
-): number {
-  const mult = gunAttachmentMarkupMultiplier(markupPct)
-  if (mult <= 0) return sellPrice
-  return Math.round(sellPrice / mult)
 }
 
 export function getItemMax(
@@ -130,12 +109,11 @@ export function getItemMax(
 export function getMicroFullAttachmentBundlePrice(
   catalog: CatalogByCategory,
   role: string | null = null,
-  markupPct: number = DEFAULT_GUN_ATTACHMENT_MARKUP_PCT,
 ): number {
   return MICRO_FULL_ATTACHMENT_COMPONENTS.reduce((sum, entry) => {
     const found = (catalog[entry.kategori] || []).find((i) => i.name === entry.name)
     if (!found) return sum
-    return sum + getEffectivePrice(entry.kategori, found.price, role, markupPct)
+    return sum + getEffectivePrice(entry.kategori, found.price, role)
   }, 0)
 }
 
@@ -143,12 +121,11 @@ export function getDisplayPrice(
   item: CatalogItem,
   catalog: CatalogByCategory,
   role: string | null = null,
-  markupPct: number = DEFAULT_GUN_ATTACHMENT_MARKUP_PCT,
 ): number {
   if (item.name === MICRO_FULL_ATTACHMENT_BUNDLE_NAME) {
-    return getMicroFullAttachmentBundlePrice(catalog, role, markupPct)
+    return getMicroFullAttachmentBundlePrice(catalog, role)
   }
-  return getEffectivePrice(item.kategori, item.price, role, markupPct)
+  return getEffectivePrice(item.kategori, item.price, role)
 }
 
 export function getCatalogScrap(

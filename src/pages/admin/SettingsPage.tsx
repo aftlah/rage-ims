@@ -27,7 +27,6 @@ export function SettingsPage() {
     adminDeletePin,
     siteNotice,
     weeklyProfitViewerIds,
-    gunAttachmentMarkupPct,
     loading,
     error,
     refresh,
@@ -44,7 +43,6 @@ export function SettingsPage() {
   const [pin, setPin] = useState('')
   const [notice, setNotice] = useState('')
   const [showPin, setShowPin] = useState(false)
-  const [markupPct, setMarkupPct] = useState('10')
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -53,14 +51,12 @@ export function SettingsPage() {
     setPin(adminDeletePin)
     setNotice(siteNotice)
     setSelectedViewerIds(weeklyProfitViewerIds)
-    setMarkupPct(String(gunAttachmentMarkupPct))
   }, [
     maintenanceMode,
     maintenanceMessage,
     adminDeletePin,
     siteNotice,
     weeklyProfitViewerIds,
-    gunAttachmentMarkupPct,
   ])
 
   useEffect(() => {
@@ -96,13 +92,6 @@ export function SettingsPage() {
   const handleSave = async () => {
     setBusy(true)
 
-    const parsedMarkup = Number(markupPct)
-    if (!Number.isFinite(parsedMarkup)) {
-      toast.error('Markup profit harus angka valid')
-      setBusy(false)
-      return
-    }
-
     if (pin.trim()) {
       const check = validateAdminDeletePin(pin)
       if (!check.ok) {
@@ -118,7 +107,6 @@ export function SettingsPage() {
       adminDeletePin: pin,
       siteNotice: notice,
       weeklyProfitViewerIds: selectedViewerIds,
-      gunAttachmentMarkupPct: parsedMarkup,
     })
     setBusy(false)
     if (!res.ok) {
@@ -217,39 +205,6 @@ export function SettingsPage() {
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/60 bg-card/80">
-        <CardHeader>
-          <CardTitle>Markup Profit Senjata & Attachment</CardTitle>
-          <CardDescription>
-            Persentase tambahan harga jual untuk member non-admin pada kategori
-            Gun dan Attachment. Dipakai di Order, Harga, Catalog admin, dan
-            perhitungan Profit Mingguan.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex flex-col gap-2 sm:max-w-xs">
-            <Label htmlFor="gun-markup-pct">Markup (%)</Label>
-            <Input
-              id="gun-markup-pct"
-              type="number"
-              min={0}
-              max={100}
-              step={1}
-              value={markupPct}
-              onChange={(e) => setMarkupPct(e.target.value)}
-              placeholder="10"
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Contoh: base $200.000 dengan markup {markupPct || '10'}% → jual{' '}
-            {Number.isFinite(Number(markupPct))
-              ? `$${Math.round(200000 * (1 + Number(markupPct) / 100)).toLocaleString('en-US')}`
-              : '—'}
-            . Admin tetap lihat harga base.
-          </p>
         </CardContent>
       </Card>
 

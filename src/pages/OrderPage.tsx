@@ -182,7 +182,7 @@ function OrderCartPanel({
 
 export function OrderPage() {
   const { member, isAdmin } = useAuth()
-  const { maintenanceMode, gunAttachmentMarkupPct } = useSettings()
+  const { maintenanceMode } = useSettings()
   const {
     catalog,
     orderWindow,
@@ -215,7 +215,6 @@ export function OrderPage() {
     nama: member?.nama ?? null,
     role,
     maintenanceBlocked: maintenanceMode && !isAdmin,
-    gunAttachmentMarkupPct,
     onSubmitted: refreshTotals,
   })
 
@@ -282,8 +281,7 @@ export function OrderPage() {
       <span className="block space-y-1">
         {isAdmin ? (
           <span className="block">
-            Beli senjata, ammo, vest & attachment. Harga & limit item mengikuti
-            role admin (tanpa markup {gunAttachmentMarkupPct}%).
+            Beli senjata, ammo, vest & attachment. Harga mengikuti katalog.
           </span>
         ) : (
           <span className="block">
@@ -300,7 +298,6 @@ export function OrderPage() {
     isOpen,
     orderWindow?.orderanke,
     isAdmin,
-    gunAttachmentMarkupPct,
   ])
 
   return (
@@ -361,12 +358,6 @@ export function OrderPage() {
           )}
 
           <div className="space-y-2 border-t border-border/50 pt-3">
-            {isAdmin ? (
-              <p className="text-xs text-muted-foreground">
-                Harga admin (tanpa markup {gunAttachmentMarkupPct}%)
-              </p>
-            ) : null}
-
             {!member?.id ? (
               <p className="text-xs text-destructive">
                 Akun belum terhubung ke member — submit tidak bisa.
@@ -449,7 +440,7 @@ export function OrderPage() {
                         {items.map((item) => (
                           <SelectItem key={item.name} value={item.name}>
                             {item.name} (
-                            {fmtUsd(getDisplayPrice(item, catalog, role, gunAttachmentMarkupPct))})
+                            {fmtUsd(getDisplayPrice(item, catalog, role))})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -507,7 +498,7 @@ export function OrderPage() {
                             {item.name}
                           </TableCell>
                           <TableCell className="font-mono tabular-nums text-foreground/90">
-                            {fmtUsd(getDisplayPrice(item, catalog, role, gunAttachmentMarkupPct))}
+                            {fmtUsd(getDisplayPrice(item, catalog, role))}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {max == null ? '—' : max}

@@ -25,7 +25,6 @@ import {
   LoadingState,
 } from '@/components/ui/StatusBlock'
 import { useAuth } from '@/contexts/AuthContext'
-import { useSettings } from '@/contexts/SettingsContext'
 import {
   CATALOG_CATEGORIES,
   EMPTY_CATALOG,
@@ -50,8 +49,7 @@ function flattenCatalog(catalog: CatalogByCategory): CatalogItem[] {
 }
 
 export function PricesPage() {
-  const { member, isAdmin } = useAuth()
-  const { gunAttachmentMarkupPct } = useSettings()
+  const { member } = useAuth()
   const role = member?.role ?? null
 
   const [catalog, setCatalog] = useState<CatalogByCategory>(EMPTY_CATALOG)
@@ -142,11 +140,7 @@ export function PricesPage() {
     <PageStack>
       <PageHeader
         title="Daftar Harga"
-        subtitle={
-          isAdmin
-            ? `Harga jual catalog — admin tanpa markup ${gunAttachmentMarkupPct}%`
-            : 'Daftar harga item yang bisa dipesan'
-        }
+        subtitle="Daftar harga item yang bisa dipesan"
       >
         <Button variant="outline" size="sm" onClick={() => void load()}>
           <RefreshCw className="size-4" />
@@ -158,9 +152,7 @@ export function PricesPage() {
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Cari item</CardTitle>
           <CardDescription>
-            {isAdmin
-              ? `Gun & Attachment non-admin +${gunAttachmentMarkupPct}% markup (sama seperti halaman Order).`
-              : 'Gunakan pencarian atau filter kategori untuk menemukan item.'}
+            Gunakan pencarian atau filter kategori untuk menemukan item.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -260,7 +252,6 @@ export function PricesPage() {
                           item,
                           catalog,
                           role,
-                          gunAttachmentMarkupPct,
                         )
                         return (
                           <TableRow key={`${item.kategori}-${item.name}`}>

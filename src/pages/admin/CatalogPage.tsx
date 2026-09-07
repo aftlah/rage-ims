@@ -39,7 +39,6 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useAuth } from '@/contexts/AuthContext'
-import { useSettings } from '@/contexts/SettingsContext'
 import { useToast } from '@/contexts/ToastContext'
 import {
   ADMIN_CATALOG_CATEGORIES,
@@ -49,7 +48,6 @@ import {
   type CatalogAdminItem,
   type CatalogUpsertInput,
 } from '@/lib/adminCatalog'
-import { getEffectivePrice } from '@/lib/catalog'
 import { fmtUsd } from '@/lib/format'
 
 const emptyForm: CatalogUpsertInput = {
@@ -64,7 +62,6 @@ const emptyForm: CatalogUpsertInput = {
 
 export function CatalogPage() {
   const { isAdmin } = useAuth()
-  const { gunAttachmentMarkupPct } = useSettings()
   const toast = useToast()
   const [items, setItems] = useState<CatalogAdminItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -311,8 +308,7 @@ export function CatalogPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nama</TableHead>
-                        <TableHead>Base</TableHead>
-                        <TableHead>Jual*</TableHead>
+                        <TableHead>Harga</TableHead>
                         <TableHead>Scrap</TableHead>
                         <TableHead>Max</TableHead>
                         <TableHead>Status</TableHead>
@@ -330,18 +326,8 @@ export function CatalogPage() {
                               </div>
                             ) : null}
                           </TableCell>
-                          <TableCell className="font-mono tabular-nums text-muted-foreground">
-                            {fmtUsd(it.price)}
-                          </TableCell>
                           <TableCell className="font-mono tabular-nums">
-                            {fmtUsd(
-                              getEffectivePrice(
-                                String(it.kategori),
-                                it.price,
-                                null,
-                                gunAttachmentMarkupPct,
-                              ),
-                            )}
+                            {fmtUsd(it.price)}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {it.scrap ?? '—'}
@@ -384,9 +370,6 @@ export function CatalogPage() {
                 </section>
               ) : null,
             )}
-            <p className="px-3 pt-2 text-xs text-muted-foreground sm:px-4">
-              *Harga jual non-admin (Gun/Attachment +{gunAttachmentMarkupPct}%)
-            </p>
           </CardContent>
         </Card>
       ) : null}
