@@ -6,7 +6,10 @@ export type CatalogAdminItem = {
   id: string
   name: string
   kategori: CatalogCategory | string
+  /** Harga base / modal */
   price: number
+  /** Harga jual member */
+  sell_price: number | null
   scrap: number | null
   max_limit: number | null
   is_active: boolean
@@ -17,6 +20,7 @@ export type CatalogUpsertInput = {
   name: string
   kategori: string
   price: number
+  sell_price: number
   scrap: number | null
   max_limit: number
   is_active: boolean
@@ -30,11 +34,17 @@ function mapRow(row: Record<string, unknown>): CatalogAdminItem {
     const note = (meta as { note?: unknown }).note
     metadata = { note: note == null ? undefined : String(note) }
   }
+  const base = Number(row.price) || 0
+  const sellRaw = row.sell_price
   return {
     id: String(row.id || ''),
     name: String(row.name || ''),
     kategori: String(row.kategori || ''),
-    price: Number(row.price) || 0,
+    price: base,
+    sell_price:
+      sellRaw == null || sellRaw === ''
+        ? null
+        : Number(sellRaw),
     scrap: row.scrap == null ? null : Number(row.scrap),
     max_limit: row.max_limit == null ? null : Number(row.max_limit),
     is_active: row.is_active !== false,
@@ -67,6 +77,7 @@ export async function upsertCatalogItem(
     kategori: input.kategori,
     name: input.name.trim(),
     price: input.price,
+    sell_price: input.sell_price,
     scrap: input.scrap,
     max_limit: input.max_limit,
     is_active: input.is_active,
@@ -75,6 +86,12 @@ export async function upsertCatalogItem(
 
   if (!payload.name) return { ok: false, error: 'Nama wajib diisi' }
   if (!payload.kategori) return { ok: false, error: 'Kategori wajib diisi' }
+  if (!Number.isFinite(input.price) || input.price < 0) {
+    return { ok: false, error: 'Harga base tidak valid' }
+  }
+  if (!Number.isFinite(input.sell_price) || input.sell_price < 0) {
+    return { ok: false, error: 'Harga jual tidak valid' }
+  }
   if (!input.max_limit || input.max_limit < 1) {
     return { ok: false, error: 'Limit Order wajib diisi dan minimal 1' }
   }
@@ -86,10 +103,15 @@ export async function upsertCatalogItem(
     ? await supabase.from('catalog_items').update(payload).eq('id', itemId)
     : await supabase.from('catalog_items').insert([payload])
 
-  if (
-    res.error &&
-    isMissingColumnError(res.error, 'max_limit')
-  ) {
+  if (res.error && isMissingColumnError(res.error, 'sell_price')) {
+    return {
+      ok: false,
+      error:
+        "Kolom 'sell_price' belum ada. Jalankan supabase/catalog_sell_price.sql di Supabase SQL Editor.",
+    }
+  }
+
+  if (res.error && isMissingColumnError(res.error, 'max_limit')) {
     const { max_limit: _m, ...rest } = payload
     res = isUpdate
       ? await supabase.from('catalog_items').update(rest).eq('id', itemId)

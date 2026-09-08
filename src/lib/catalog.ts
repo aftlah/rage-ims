@@ -5,7 +5,10 @@ export type CatalogCategory = (typeof CATALOG_CATEGORIES)[number]
 
 export type CatalogItem = {
   name: string
+  /** Harga base / modal (untuk hitung profit). */
   price: number
+  /** Harga jual member. Null/0 → pakai price. */
+  sell_price: number | null
   scrap: number | null
   metadata: unknown
   max_limit: number | null
@@ -73,13 +76,29 @@ function isCatalogCategory(value: string): value is CatalogCategory {
   return (CATALOG_CATEGORIES as readonly string[]).includes(value)
 }
 
-/** Catalog price is the sell price for everyone (no role markup). */
+/** Harga base (modal) dari item katalog. */
+export function getItemBasePrice(
+  item: Pick<CatalogItem, 'price'>,
+): number {
+  return Number(item.price) || 0
+}
+
+/** Harga jual member — sell_price jika ada, else base. */
+export function getItemSellPrice(
+  item: Pick<CatalogItem, 'price' | 'sell_price'>,
+): number {
+  const sell = Number(item.sell_price)
+  if (Number.isFinite(sell) && sell > 0) return sell
+  return getItemBasePrice(item)
+}
+
+/** @deprecated Prefer getItemSellPrice — kept for call sites that pass kategori/role. */
 export function getEffectivePrice(
   _kategori: string,
-  basePrice: number,
+  baseOrSellPrice: number,
   _role: string | null = null,
 ): number {
-  return basePrice
+  return baseOrSellPrice
 }
 
 export function getItemMax(
@@ -108,12 +127,12 @@ export function getItemMax(
 
 export function getMicroFullAttachmentBundlePrice(
   catalog: CatalogByCategory,
-  role: string | null = null,
+  _role: string | null = null,
 ): number {
   return MICRO_FULL_ATTACHMENT_COMPONENTS.reduce((sum, entry) => {
     const found = (catalog[entry.kategori] || []).find((i) => i.name === entry.name)
     if (!found) return sum
-    return sum + getEffectivePrice(entry.kategori, found.price, role)
+    return sum + getItemSellPrice(found)
   }, 0)
 }
 
@@ -125,7 +144,7 @@ export function getDisplayPrice(
   if (item.name === MICRO_FULL_ATTACHMENT_BUNDLE_NAME) {
     return getMicroFullAttachmentBundlePrice(catalog, role)
   }
-  return getEffectivePrice(item.kategori, item.price, role)
+  return getItemSellPrice(item)
 }
 
 export function getCatalogScrap(
@@ -165,6 +184,10 @@ export async function fetchCatalog(): Promise<{
     catalog[cat].push({
       name: String(row.name || ''),
       price: Number(row.price) || 0,
+      sell_price:
+        row.sell_price == null || row.sell_price === ''
+          ? null
+          : Number(row.sell_price),
       scrap: row.scrap == null ? null : Number(row.scrap),
       metadata: row.metadata ?? null,
       max_limit: row.max_limit == null ? null : Number(row.max_limit),

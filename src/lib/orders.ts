@@ -1,7 +1,7 @@
 import type { CatalogByCategory, CatalogCategory, CatalogItem } from './catalog'
 import {
-  getEffectivePrice,
   getItemMax,
+  getItemSellPrice,
   MICRO_FULL_ATTACHMENT_BUNDLE_NAME,
   MICRO_FULL_ATTACHMENT_COMPONENTS,
 } from './catalog'
@@ -181,11 +181,7 @@ export function addItemToCart(args: {
       nextCart = pushOrIncrement(nextCart, {
         item: entry.name,
         kategori: entry.kategori,
-        price: getEffectivePrice(
-          entry.kategori,
-          itemInCatalog.price,
-          args.role,
-        ),
+        price: getItemSellPrice(itemInCatalog),
         qty,
         scrap: itemInCatalog.scrap || 0,
       })
@@ -220,7 +216,7 @@ export function addItemToCart(args: {
     cart: pushOrIncrement(args.cart, {
       item: itemName,
       kategori,
-      price: getEffectivePrice(kategori, args.item.price, args.role),
+      price: getItemSellPrice(args.item),
       qty,
       scrap: args.item.scrap || 0,
     }),

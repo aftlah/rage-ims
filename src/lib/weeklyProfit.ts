@@ -2,6 +2,7 @@ import {
   CATALOG_CATEGORIES,
   EMPTY_CATALOG,
   fetchCatalog,
+  getItemBasePrice,
   type CatalogByCategory,
 } from './catalog'
 import { fmtUsd } from './format'
@@ -68,14 +69,14 @@ function findCatalogBasePrice(
     const found = catalog[kategori as keyof CatalogByCategory]?.find(
       (i) => i.name.toLowerCase() === name.toLowerCase(),
     )
-    if (found) return found.price
+    if (found) return getItemBasePrice(found)
   }
 
   for (const cat of CATALOG_CATEGORIES) {
     const found = catalog[cat].find(
       (i) => i.name.toLowerCase() === name.toLowerCase(),
     )
-    if (found) return found.price
+    if (found) return getItemBasePrice(found)
   }
 
   return null

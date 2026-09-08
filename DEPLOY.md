@@ -63,6 +63,7 @@ Site settings (maintenance, delete PIN, notice) live in Supabase table `app_sett
 
 1. Open Supabase → SQL Editor
 2. Run the contents of `supabase/app_settings.sql`
+3. Run the contents of `supabase/catalog_sell_price.sql` (harga base + harga jual di Catalog)
 3. Confirm table `app_settings` has 4 seed rows
 4. Login as **admin** → Admin → Settings → set PIN hapus (min 6 chars) and toggle maintenance as needed
 
@@ -141,6 +142,7 @@ Set `DISCORD_ENABLED=false` to soft-disable all Discord posts without undeployin
 
 - [ ] `.env` filled locally, not committed
 - [ ] `supabase/app_settings.sql` executed once
+- [ ] `supabase/catalog_sell_price.sql` executed once
 - [ ] `discord-notify`, `admin-sync-user`, `admin-delete-user`, and `admin-create-user` deployed
 - [ ] `npm run build` succeeded
 - [ ] Uploaded `dist/` contents including `.htaccess`

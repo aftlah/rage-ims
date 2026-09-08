@@ -54,6 +54,7 @@ const emptyForm: CatalogUpsertInput = {
   name: '',
   kategori: 'Gun',
   price: 0,
+  sell_price: 0,
   scrap: null,
   max_limit: 1,
   is_active: true,
@@ -110,6 +111,10 @@ export function CatalogPage() {
       name: item.name,
       kategori: String(item.kategori),
       price: item.price,
+      sell_price:
+        item.sell_price != null && item.sell_price > 0
+          ? item.sell_price
+          : item.price,
       scrap: item.scrap,
       max_limit: item.max_limit ?? 1,
       is_active: item.is_active,
@@ -154,7 +159,7 @@ export function CatalogPage() {
     <PageStack>
       <PageHeader
         title="Admin Catalog"
-        subtitle="CRUD catalog_items (tanpa service role)"
+        subtitle="Atur item dan harga jual yang dipakai di Order"
       >
         <Button variant="outline" size="sm" onClick={() => void refresh()}>
           <RefreshCw className="size-4" />
@@ -202,7 +207,7 @@ export function CatalogPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label>Harga dasar</Label>
+              <Label>Harga base</Label>
               <Input
                 type="number"
                 value={form.price}
@@ -213,6 +218,25 @@ export function CatalogPage() {
                   }))
                 }
               />
+              <p className="text-[11px] text-muted-foreground">
+                Modal / harga asli untuk hitung profit.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>Harga jual</Label>
+              <Input
+                type="number"
+                value={form.sell_price}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    sell_price: Number(e.target.value) || 0,
+                  }))
+                }
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Harga yang dibayar member di Order.
+              </p>
             </div>
             <div className="flex flex-col gap-2">
               <Label>Scrap</Label>
@@ -308,7 +332,8 @@ export function CatalogPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nama</TableHead>
-                        <TableHead>Harga</TableHead>
+                        <TableHead>Base</TableHead>
+                        <TableHead>Jual</TableHead>
                         <TableHead>Scrap</TableHead>
                         <TableHead>Max</TableHead>
                         <TableHead>Status</TableHead>
@@ -316,7 +341,12 @@ export function CatalogPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {rows.map((it) => (
+                      {rows.map((it) => {
+                        const jual =
+                          it.sell_price != null && it.sell_price > 0
+                            ? it.sell_price
+                            : it.price
+                        return (
                         <TableRow key={it.id}>
                           <TableCell className="whitespace-normal">
                             <div className="font-medium leading-tight">{it.name}</div>
@@ -326,8 +356,11 @@ export function CatalogPage() {
                               </div>
                             ) : null}
                           </TableCell>
-                          <TableCell className="font-mono tabular-nums">
+                          <TableCell className="font-mono tabular-nums text-muted-foreground">
                             {fmtUsd(it.price)}
+                          </TableCell>
+                          <TableCell className="font-mono tabular-nums">
+                            {fmtUsd(jual)}
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {it.scrap ?? '—'}
@@ -364,7 +397,7 @@ export function CatalogPage() {
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )})}
                     </TableBody>
                   </Table>
                 </section>
